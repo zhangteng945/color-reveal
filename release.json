@@ -1,0 +1,25 @@
+{
+  "role": "isolated complete readonly export; NOT public deployment/authority merge",
+  "exportVersion": 1,
+  "requestId": "5891e525-a172-44c4-89f4-cc4ebfa6eccd",
+  "createdAt": "2026-11-17T20:48:55.376Z",
+  "catalog": {
+    "schemaVersion": 1,
+    "revision": 18,
+    "sha256": "2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78",
+    "catalog": "/library/releases/2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78.json"
+  },
+  "runtimeSha": "d3e5b9dee7faa981353ed19840ed47ad4b33946a5c520cd7a2751dc1c83d4016",
+  "treeFormula": "CR-TREE-SHA256-V1",
+  "contracts": {
+    "catalog": 4,
+    "consumption": 3,
+    "queue": 1,
+    "silk": 1,
+    "assists": 2
+  },
+  "mounts": [
+    "/",
+    "/color-reveal/"
+  ]
+}
