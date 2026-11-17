@@ -1,5 +1,3 @@
 # 拾光之旅
 
-试玩：https://zhangteng945.github.io/color-reveal/
-
-此仓库只发布构建结果，不含源码。
+公开试玩页。源码与构建在共享电脑的 `/workspace/color-reveal-web/`。
