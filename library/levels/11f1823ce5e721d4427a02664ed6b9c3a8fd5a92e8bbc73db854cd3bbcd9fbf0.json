@@ -1,0 +1,468 @@
+{
+  "schemaVersion": 1,
+  "sourceCatalogSha256": "2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78",
+  "level": {
+    "id": "fruit-lemon-silk-number-lab-4232",
+    "name": "柠檬",
+    "subtitle": "第8晚",
+    "mechanism": "layered-collectible-v2",
+    "meta": {
+      "season": {
+        "id": "experimental-4232",
+        "name": "剪丝试验 · 待审核",
+        "order": 120
+      },
+      "theme": {
+        "id": "silk-number",
+        "name": "剪丝与图块",
+        "order": 2
+      },
+      "night": 8,
+      "paintingName": "柠檬"
+    },
+    "width": 16,
+    "height": 16,
+    "cover": [
+      "ĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀāāĂĂĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĂĄāĂĂĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĂāĄĄāĂĂĀĀĀ",
+      "ĀĀĀĀĀĂĄąăąăĄĂĀĀĀ",
+      "ĀĀĀĀĂāāāăăăąĂĀĀĀ",
+      "ĀĀĀĂĄāāăăăăąĄĂĀĀ",
+      "ĀĀĀāāāāāāăāąĄĂĀĀ",
+      "ĀĀĂĄāāăāāăāăąĂĀĀ",
+      "ĀĀĂĄăăăăăăāąĄĂĀĀ",
+      "ĀĀĂĄăăăāăāăąĄĂĀĀ",
+      "ĀĀĂĄăāăāāăąąĂĀĀĀ",
+      "ĀĀĀĂąăăăăąąāĂĀĀĀ",
+      "ĀĀĀĂĄăąąąĄāĂĀĀĀĀ",
+      "ĀĀĀĂāāĂĂĂĂĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀ"
+    ],
+    "coverKey": {
+      "Ā": "rgb-fef5e4",
+      "ā": "rgb-e3ca54",
+      "Ă": "rgb-d3c4ac",
+      "ă": "rgb-ffdb47",
+      "Ą": "rgb-d2b638",
+      "ą": "rgb-fcd238"
+    },
+    "paint": [
+      "ĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀāāĂĂĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĂĄāĂĂĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĂāĄĄāĂĂĀĀĀ",
+      "ĀĀĀĀĀĂĄąăąăĄĂĀĀĀ",
+      "ĀĀĀĀĂāāāăăăąĂĀĀĀ",
+      "ĀĀĀĂĄāāăăăăąĄĂĀĀ",
+      "ĀĀĀāāāāāāăāąĄĂĀĀ",
+      "ĀĀĂĄāāăāāăāăąĂĀĀ",
+      "ĀĀĂĄăăăăăăāąĄĂĀĀ",
+      "ĀĀĂĄăăăāăāăąĄĂĀĀ",
+      "ĀĀĂĄăāăāāăąąĂĀĀĀ",
+      "ĀĀĀĂąăăăăąąāĂĀĀĀ",
+      "ĀĀĀĂĄăąąąĄāĂĀĀĀĀ",
+      "ĀĀĀĂāāĂĂĂĂĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀ"
+    ],
+    "paintKey": {
+      "Ā": "rgb-fef5e4",
+      "ā": "rgb-e3ca54",
+      "Ă": "rgb-d3c4ac",
+      "ă": "rgb-ffdb47",
+      "Ą": "rgb-d2b638",
+      "ą": "rgb-fcd238"
+    },
+    "portraitId": "raster-fruit-lemon",
+    "columns": [
+      [
+        {
+          "jarId": "silk-tool-1",
+          "toolType": "silk-cutter",
+          "count": 4
+        },
+        {
+          "color": "rgb-e3ca54",
+          "count": 20,
+          "jarId": "jar-1"
+        },
+        {
+          "color": "rgb-fcd238",
+          "count": 1,
+          "jarId": "jar-2"
+        }
+      ],
+      [
+        {
+          "color": "rgb-fcd238",
+          "count": 15,
+          "jarId": "jar-3"
+        }
+      ],
+      [
+        {
+          "color": "rgb-fef5e4",
+          "count": 128,
+          "jarId": "jar-4"
+        },
+        {
+          "color": "rgb-d2b638",
+          "count": 16,
+          "jarId": "jar-5"
+        },
+        {
+          "color": "rgb-ffdb47",
+          "count": 32,
+          "jarId": "jar-6"
+        }
+      ],
+      [
+        {
+          "color": "rgb-d3c4ac",
+          "count": 32,
+          "jarId": "jar-7"
+        },
+        {
+          "color": "rgb-e3ca54",
+          "count": 7,
+          "jarId": "jar-8"
+        },
+        {
+          "color": "rgb-e3ca54",
+          "count": 5,
+          "jarId": "jar-9"
+        }
+      ]
+    ],
+    "maxSlots": 5,
+    "palette": {
+      "rgb-fef5e4": {
+        "id": "rgb-fef5e4",
+        "name": "rgb-fef5e4",
+        "fill": "#fef5e4",
+        "glow": "#fef5e4",
+        "ink": "#241b22"
+      },
+      "rgb-e3ca54": {
+        "id": "rgb-e3ca54",
+        "name": "rgb-e3ca54",
+        "fill": "#e3ca54",
+        "glow": "#e3ca54",
+        "ink": "#241b22"
+      },
+      "rgb-d3c4ac": {
+        "id": "rgb-d3c4ac",
+        "name": "rgb-d3c4ac",
+        "fill": "#d3c4ac",
+        "glow": "#d3c4ac",
+        "ink": "#241b22"
+      },
+      "rgb-ffdb47": {
+        "id": "rgb-ffdb47",
+        "name": "rgb-ffdb47",
+        "fill": "#ffdb47",
+        "glow": "#ffdb47",
+        "ink": "#241b22"
+      },
+      "rgb-d2b638": {
+        "id": "rgb-d2b638",
+        "name": "rgb-d2b638",
+        "fill": "#d2b638",
+        "glow": "#d2b638",
+        "ink": "#241b22"
+      },
+      "rgb-fcd238": {
+        "id": "rgb-fcd238",
+        "name": "rgb-fcd238",
+        "fill": "#fcd238",
+        "glow": "#fcd238",
+        "ink": "#241b22"
+      }
+    },
+    "artwork": {
+      "kind": "raster",
+      "portraitId": "raster-fruit-lemon",
+      "sourceHash": "3eadda93184fd527277a569bc28244cec07b476bed11a60bb832ae3561b78fae",
+      "normalizedHash": "70e3e93ef65df6d6825735b31e33fba0ee73d4fa6afaea7a93f2cdb3887e3f30",
+      "width": 2048,
+      "height": 2048,
+      "asset": "/library/assets/70e3e93ef65df6d6825735b31e33fba0ee73d4fa6afaea7a93f2cdb3887e3f30.png",
+      "crop": {
+        "x": 380,
+        "y": 354,
+        "size": 1314
+      },
+      "alpha": {
+        "mode": "composite",
+        "matte": [
+          255,
+          246,
+          227
+        ]
+      },
+      "samplerVersion": "area-linear-premultiplied-rgba-v1",
+      "quantizerVersion": "deterministic-median-cut-v1",
+      "revealHash": "f1de5fa339e3dc7f49c85b43f93ff594e3eeed1217598f5cc0cc98125ee61061",
+      "revealAsset": "/library/assets/f1de5fa339e3dc7f49c85b43f93ff594e3eeed1217598f5cc0cc98125ee61061.png",
+      "revealSize": 768,
+      "revealVersion": "same-crop-linear-area-v1"
+    },
+    "generation": {
+      "version": 1,
+      "seed": "silk4232-v1:lemon",
+      "target": 10,
+      "jarCount": 10,
+      "pairCount": 0,
+      "recipe": {
+        "id": "silk-number",
+        "pairs": 0,
+        "keys": 0,
+        "overlay": "number"
+      },
+      "witness": [
+        0,
+        2,
+        0,
+        3,
+        1,
+        3,
+        2,
+        2,
+        0,
+        3
+      ],
+      "totalConsumption": 260,
+      "coloredConsumption": 256,
+      "toolConsumption": 4,
+      "collectibles": 256,
+      "cargoTotal": 256,
+      "stepSemantics": "jar-selections-v1"
+    },
+    "verification": {
+      "status": "engine-witness-verified",
+      "reason": null,
+      "counts": {
+        "selections": 10,
+        "selectedJars": 10,
+        "consumed": 260,
+        "collected": 256,
+        "returned": 256,
+        "cleared": 256,
+        "breaks": 0,
+        "unlocks": 0,
+        "toolConsumed": 4
+      },
+      "steps": 269,
+      "totalConsumption": 260,
+      "coloredConsumption": 256,
+      "toolConsumption": 4,
+      "collectibles": 256,
+      "cargoTotal": 256,
+      "firstClear": {
+        "cell": {
+          "x": 0,
+          "y": 0
+        },
+        "selection": 2
+      },
+      "witness": [
+        0,
+        2,
+        0,
+        3,
+        1,
+        3,
+        2,
+        2,
+        0,
+        3
+      ],
+      "finalStatus": "won",
+      "keyPolicy": "actual shared reveal and flight acknowledgement, headless serialized adapter (not wall-clock animation proof)",
+      "contractVersion": 3,
+      "queueContractVersion": 1,
+      "silkContractVersion": 1,
+      "engine": "src/game/engine.js",
+      "uiReady": true
+    },
+    "baseLevelId": "fruit-lemon",
+    "experimental": true,
+    "sourceMeta": {
+      "season": {
+        "id": "fruit-season",
+        "name": "果实之季",
+        "order": 2
+      },
+      "theme": {
+        "id": "fruit-study",
+        "name": "果园拾光",
+        "order": 1
+      },
+      "night": 8,
+      "paintingName": "柠檬"
+    },
+    "consumptionOverlay": {
+      "version": 1,
+      "cells": [],
+      "blocks": [
+        {
+          "id": "number-1",
+          "kind": "number",
+          "cells": [
+            {
+              "x": 14,
+              "y": 13
+            },
+            {
+              "x": 15,
+              "y": 13
+            },
+            {
+              "x": 14,
+              "y": 14
+            },
+            {
+              "x": 13,
+              "y": 13
+            },
+            {
+              "x": 14,
+              "y": 12
+            }
+          ],
+          "hits": 5,
+          "derivation": {
+            "kind": "merged-source-cells-plus-extra",
+            "mergedCells": 5,
+            "extraLayers": 0
+          }
+        },
+        {
+          "id": "number-2",
+          "kind": "number",
+          "cells": [
+            {
+              "x": 5,
+              "y": 13
+            },
+            {
+              "x": 5,
+              "y": 12
+            },
+            {
+              "x": 6,
+              "y": 12
+            },
+            {
+              "x": 7,
+              "y": 12
+            },
+            {
+              "x": 6,
+              "y": 11
+            }
+          ],
+          "hits": 5,
+          "derivation": {
+            "kind": "merged-source-cells-plus-extra",
+            "mergedCells": 5,
+            "extraLayers": 0
+          }
+        },
+        {
+          "id": "number-3",
+          "kind": "number",
+          "cells": [
+            {
+              "x": 7,
+              "y": 7
+            },
+            {
+              "x": 8,
+              "y": 7
+            },
+            {
+              "x": 7,
+              "y": 8
+            },
+            {
+              "x": 6,
+              "y": 7
+            },
+            {
+              "x": 8,
+              "y": 8
+            }
+          ],
+          "hits": 5,
+          "derivation": {
+            "kind": "merged-source-cells-plus-extra",
+            "mergedCells": 5,
+            "extraLayers": 0
+          }
+        }
+      ]
+    },
+    "queueMechanics": {
+      "version": 1,
+      "recipe": {
+        "id": "silk-number",
+        "keys": 0,
+        "pairs": 0
+      },
+      "keys": [],
+      "locks": []
+    },
+    "silkMechanics": {
+      "version": 1,
+      "webs": [
+        {
+          "id": "web-1",
+          "toolType": "silk-cutter",
+          "cells": [
+            {
+              "x": 2,
+              "y": 8
+            },
+            {
+              "x": 3,
+              "y": 8
+            },
+            {
+              "x": 4,
+              "y": 8
+            }
+          ],
+          "remaining": 2
+        },
+        {
+          "id": "web-2",
+          "toolType": "silk-cutter",
+          "cells": [
+            {
+              "x": 13,
+              "y": 14
+            },
+            {
+              "x": 12,
+              "y": 14
+            },
+            {
+              "x": 13,
+              "y": 15
+            }
+          ],
+          "remaining": 2
+        }
+      ],
+      "recipe": {
+        "id": "silk-number",
+        "pairs": 0,
+        "keys": 0,
+        "overlay": "number"
+      }
+    }
+  },
+  "scene": null
+}

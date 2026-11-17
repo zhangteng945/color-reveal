@@ -1,0 +1,484 @@
+{
+  "schemaVersion": 1,
+  "sourceCatalogSha256": "2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78",
+  "level": {
+    "id": "mountain-lantern",
+    "name": "山灯",
+    "subtitle": "第三关",
+    "blurb": "清掉外层以后，四列都要再看一眼。不要急着把还够不着的都放上来，记得留下空槽。",
+    "width": 16,
+    "height": 16,
+    "cover": [
+      "IIIIIIIIIIIIIIII",
+      "ISSSSSSSSSSSSSSI",
+      "ISSSSSSSSSGGGSSI",
+      "ISSSSSVVSSGGGSSI",
+      "ISSSSVVVVSSGSSSI",
+      "ISSSVVVVCSSSSSSI",
+      "IMMMMMMCCMMMMMMI",
+      "IMMMMMCCCCMMMMMI",
+      "IMMMMGGRGGRMMMMI",
+      "IMMMMRRRRRRMTMMI",
+      "IMMMMRRRRRRMTTMI",
+      "IMMMMRWWWWRMTTMI",
+      "IMMMMMWWWWBBBMMI",
+      "IMMMMWWWWWBBBMMI",
+      "IMMMMWWWWWWMMMMI",
+      "IIIIIIIIIIIIIIII"
+    ],
+    "coverKey": {
+      "W": "cream",
+      "C": "coral",
+      "T": "teal",
+      "G": "gold",
+      "V": "violet",
+      "M": "moss",
+      "S": "sky",
+      "B": "blush",
+      "R": "rust",
+      "I": "ink"
+    },
+    "paint": [
+      "IIIIIIIIIIIIIIII",
+      "ISSSSSSSSSSSSSSI",
+      "ISSSSSSSSSGGGSSI",
+      "ISSSSSVVSSGGGSSI",
+      "ISSSSVVVVSSGSSSI",
+      "ISSSVVVVCSSSSSSI",
+      "IMMMMMMCCMMMMMMI",
+      "IMMMMMCCCCMMMMMI",
+      "IMMMMGGRGGRMMMMI",
+      "IMMMMRRRRRRMTMMI",
+      "IMMMMRRRRRRMTTMI",
+      "IMMMMRWWWWRMTTMI",
+      "IMMMMMWWWWBBBMMI",
+      "IMMMMWWWWWBBBMMI",
+      "IMMMMWWWWWWMMMMI",
+      "IIIIIIIIIIIIIIII"
+    ],
+    "paintKey": {
+      "W": "cream",
+      "C": "coral",
+      "T": "teal",
+      "G": "gold",
+      "V": "violet",
+      "M": "moss",
+      "S": "sky",
+      "B": "blush",
+      "R": "rust",
+      "I": "ink"
+    },
+    "portraitId": "mountain-lantern",
+    "columns": [
+      [
+        {
+          "color": "ink",
+          "count": 60
+        },
+        {
+          "color": "gold",
+          "count": 7
+        },
+        {
+          "color": "violet",
+          "count": 10
+        }
+      ],
+      [
+        {
+          "color": "gold",
+          "count": 4
+        },
+        {
+          "color": "blush",
+          "count": 6
+        },
+        {
+          "color": "rust",
+          "count": 16
+        }
+      ],
+      [
+        {
+          "color": "coral",
+          "count": 7
+        },
+        {
+          "color": "moss",
+          "count": 30
+        },
+        {
+          "color": "sky",
+          "count": 52
+        }
+      ],
+      [
+        {
+          "color": "teal",
+          "count": 5
+        },
+        {
+          "color": "moss",
+          "count": 40
+        },
+        {
+          "color": "cream",
+          "count": 19
+        }
+      ]
+    ],
+    "maxSlots": 5,
+    "total": 256,
+    "counts": {
+      "ink": 60,
+      "sky": 52,
+      "gold": 11,
+      "violet": 10,
+      "coral": 7,
+      "moss": 70,
+      "rust": 16,
+      "teal": 5,
+      "cream": 19,
+      "blush": 6
+    },
+    "mechanism": "collectible-v1",
+    "meta": {
+      "season": {
+        "id": "first-light",
+        "name": "拾光初季",
+        "order": 1
+      },
+      "theme": {
+        "id": "windows-and-voyages",
+        "name": "窗与远行",
+        "order": 1
+      },
+      "night": 3,
+      "paintingName": "山灯"
+    },
+    "palette": {
+      "cream": {
+        "id": "cream",
+        "name": "米白",
+        "fill": "#F3E2C0",
+        "ink": "#5A4030",
+        "glow": "#FFF6DF"
+      },
+      "coral": {
+        "id": "coral",
+        "name": "珊瑚",
+        "fill": "#E05A4F",
+        "ink": "#FFF5F2",
+        "glow": "#FF8F84"
+      },
+      "teal": {
+        "id": "teal",
+        "name": "青石",
+        "fill": "#2F7A74",
+        "ink": "#F3FFFB",
+        "glow": "#5ECFC4"
+      },
+      "gold": {
+        "id": "gold",
+        "name": "金黄",
+        "fill": "#E6B03A",
+        "ink": "#3A2A08",
+        "glow": "#FFE28A"
+      },
+      "violet": {
+        "id": "violet",
+        "name": "暮紫",
+        "fill": "#6A4C93",
+        "ink": "#F6F0FF",
+        "glow": "#B389E6"
+      },
+      "moss": {
+        "id": "moss",
+        "name": "苔绿",
+        "fill": "#5B8C3E",
+        "ink": "#F3FFE8",
+        "glow": "#A5D67A"
+      },
+      "sky": {
+        "id": "sky",
+        "name": "晴蓝",
+        "fill": "#3A8FD0",
+        "ink": "#F0F8FF",
+        "glow": "#8FCBFF"
+      },
+      "blush": {
+        "id": "blush",
+        "name": "粉霞",
+        "fill": "#E58AA8",
+        "ink": "#3A1520",
+        "glow": "#FFC0D4"
+      },
+      "rust": {
+        "id": "rust",
+        "name": "赭石",
+        "fill": "#B45A2A",
+        "ink": "#FFF4EA",
+        "glow": "#E08A54"
+      },
+      "ink": {
+        "id": "ink",
+        "name": "墨色",
+        "fill": "#3A3550",
+        "ink": "#F2F0FF",
+        "glow": "#8A82B0"
+      }
+    },
+    "verification": {
+      "status": "legacy-preserved",
+      "basis": "published-4218"
+    },
+    "artwork": {
+      "kind": "legacy",
+      "portraitId": "mountain-lantern"
+    }
+  },
+  "scene": {
+    "id": "mountain-lantern",
+    "name": "山灯",
+    "width": 16,
+    "height": 16,
+    "layout": {
+      "night": {
+        "color": "ink"
+      },
+      "sky": {
+        "v0": 0.08,
+        "v1": 0.42,
+        "color": "sky"
+      },
+      "farPeak": {
+        "u": 0.42,
+        "vPeak": 0.18,
+        "u0": 0.16,
+        "u1": 0.707,
+        "v1": 0.46,
+        "color": "violet"
+      },
+      "star": {
+        "u": 0.72,
+        "v": 0.2,
+        "r": 0.09,
+        "color": "gold"
+      },
+      "nearHill": {
+        "v0": 0.4,
+        "color": "moss"
+      },
+      "roof": {
+        "u0": 0.3,
+        "v0": 0.32,
+        "u1": 0.72,
+        "v1": 0.54,
+        "color": "coral"
+      },
+      "house": {
+        "u0": 0.34,
+        "v0": 0.5,
+        "u1": 0.7,
+        "v1": 0.78,
+        "color": "rust"
+      },
+      "windows": [
+        {
+          "u": 0.38,
+          "v": 0.54,
+          "r": 0.05,
+          "color": "gold"
+        },
+        {
+          "u": 0.58,
+          "v": 0.54,
+          "r": 0.05,
+          "color": "gold"
+        }
+      ],
+      "path": {
+        "u": 0.5,
+        "v0": 0.68,
+        "v1": 0.92,
+        "half": 0.17,
+        "color": "cream"
+      },
+      "trees": {
+        "u0": 0.72,
+        "v0": 0.48,
+        "u1": 0.88,
+        "v1": 0.74,
+        "color": "teal"
+      },
+      "flowers": {
+        "u": 0.72,
+        "v": 0.8,
+        "r": 0.08,
+        "color": "blush"
+      }
+    },
+    "cover": [
+      "IIIIIIIIIIIIIIII",
+      "ISSSSSSSSSSSSSSI",
+      "ISSSSSSSSSGGGSSI",
+      "ISSSSSVVSSGGGSSI",
+      "ISSSSVVVVSSGSSSI",
+      "ISSSVVVVCSSSSSSI",
+      "IMMMMMMCCMMMMMMI",
+      "IMMMMMCCCCMMMMMI",
+      "IMMMMGGRGGRMMMMI",
+      "IMMMMRRRRRRMTMMI",
+      "IMMMMRRRRRRMTTMI",
+      "IMMMMRWWWWRMTTMI",
+      "IMMMMMWWWWBBBMMI",
+      "IMMMMWWWWWBBBMMI",
+      "IMMMMWWWWWWMMMMI",
+      "IIIIIIIIIIIIIIII"
+    ],
+    "coverKey": {
+      "W": "cream",
+      "C": "coral",
+      "T": "teal",
+      "G": "gold",
+      "V": "violet",
+      "M": "moss",
+      "S": "sky",
+      "B": "blush",
+      "R": "rust",
+      "I": "ink"
+    },
+    "anchors": [
+      {
+        "id": "night",
+        "x": 0,
+        "y": 0,
+        "color": "ink",
+        "feature": "night"
+      },
+      {
+        "id": "sky",
+        "x": 4,
+        "y": 2,
+        "color": "sky",
+        "feature": "sky"
+      },
+      {
+        "id": "peak",
+        "x": 6,
+        "y": 4,
+        "color": "violet",
+        "feature": "peak"
+      },
+      {
+        "id": "star",
+        "x": 11,
+        "y": 3,
+        "color": "gold",
+        "feature": "star"
+      },
+      {
+        "id": "hill",
+        "x": 3,
+        "y": 7,
+        "color": "moss",
+        "feature": "hill"
+      },
+      {
+        "id": "roof",
+        "x": 8,
+        "y": 6,
+        "color": "coral",
+        "feature": "roof"
+      },
+      {
+        "id": "window-l",
+        "x": 6,
+        "y": 8,
+        "color": "gold",
+        "feature": "window"
+      },
+      {
+        "id": "window-r",
+        "x": 9,
+        "y": 8,
+        "color": "gold",
+        "feature": "window"
+      },
+      {
+        "id": "house",
+        "x": 8,
+        "y": 10,
+        "color": "rust",
+        "feature": "house"
+      },
+      {
+        "id": "path",
+        "x": 7,
+        "y": 12,
+        "color": "cream",
+        "feature": "path"
+      },
+      {
+        "id": "trees",
+        "x": 12,
+        "y": 9,
+        "color": "teal",
+        "feature": "trees"
+      },
+      {
+        "id": "flowers",
+        "x": 11,
+        "y": 12,
+        "color": "blush",
+        "feature": "flowers"
+      }
+    ],
+    "highlights": [
+      [
+        10,
+        2
+      ],
+      [
+        11,
+        2
+      ],
+      [
+        12,
+        2
+      ],
+      [
+        10,
+        3
+      ],
+      [
+        11,
+        3
+      ],
+      [
+        12,
+        3
+      ],
+      [
+        11,
+        4
+      ],
+      [
+        5,
+        8
+      ],
+      [
+        6,
+        8
+      ],
+      [
+        8,
+        8
+      ],
+      [
+        9,
+        8
+      ]
+    ]
+  }
+}

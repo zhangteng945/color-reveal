@@ -1,0 +1,350 @@
+{
+  "schemaVersion": 1,
+  "sourceCatalogSha256": "2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78",
+  "level": {
+    "id": "fruit-grapes-assist-random-twelve-keys-lab-4240",
+    "name": "葡萄",
+    "subtitle": "第4晚",
+    "mechanism": "layered-collectible-v2",
+    "meta": {
+      "season": {
+        "id": "experimental-4240",
+        "name": "可选辅助试验 · 待审核",
+        "order": 130
+      },
+      "theme": {
+        "id": "random-twelve",
+        "name": "逐块清理",
+        "order": 0
+      },
+      "night": 4,
+      "paintingName": "葡萄"
+    },
+    "width": 16,
+    "height": 16,
+    "cover": [
+      "ĀāāāĀāāāāāāāāāāĀ",
+      "āĀāāĀāĂăĀĂăāāĀĀĀ",
+      "ĀĀĀāĂĂĂĂăăĀĀĀĀĀĀ",
+      "ĀĀĀăĂĂĂĂĄăāĀĀĀĀĀ",
+      "ĀĀĀăĂĂĂĂĄāĂāĀĀĀĀ",
+      "ĀĀĀāąĄĄąąĄąĄăĀĀĀ",
+      "ĀĀĀĂąąĄąąĄąąąĀĀĀ",
+      "ĀĀĀăąąĄąąĄĄĄăĀĀĀ",
+      "ĀĀĀāĄĄĄĄĄąąăĀĀĀĀ",
+      "ĀĀĀāĄąąąĄąąăĀĀĀĀ",
+      "ĀĀĀāĄĄąąĄąĄăĀĀĀĀ",
+      "ĀĀĀĀăąĄĄĄĄăĀĀĀĀĀ",
+      "ĀĀĀĀĀąąĄĄĄāĀĀĀĀĀ",
+      "ĀĀĀĀĀąąąąāĀĀĀĀĀĀ",
+      "ĀĀĀĀĀăĄĄāĀĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀāāĀĀĀĀĀĀĀĀ"
+    ],
+    "coverKey": {
+      "Ā": "rgb-fef5e6",
+      "ā": "rgb-f8efe1",
+      "Ă": "rgb-85a862",
+      "ă": "rgb-d0c4b9",
+      "Ą": "rgb-6e4570",
+      "ą": "rgb-825791"
+    },
+    "paint": [
+      "ĀāāāĀāāāāāāāāāāĀ",
+      "āĀāāĀāĂăĀĂăāāĀĀĀ",
+      "ĀĀĀāĂĂĂĂăăĀĀĀĀĀĀ",
+      "ĀĀĀăĂĂĂĂĄăāĀĀĀĀĀ",
+      "ĀĀĀăĂĂĂĂĄāĂāĀĀĀĀ",
+      "ĀĀĀāąĄĄąąĄąĄăĀĀĀ",
+      "ĀĀĀĂąąĄąąĄąąąĀĀĀ",
+      "ĀĀĀăąąĄąąĄĄĄăĀĀĀ",
+      "ĀĀĀāĄĄĄĄĄąąăĀĀĀĀ",
+      "ĀĀĀāĄąąąĄąąăĀĀĀĀ",
+      "ĀĀĀāĄĄąąĄąĄăĀĀĀĀ",
+      "ĀĀĀĀăąĄĄĄĄăĀĀĀĀĀ",
+      "ĀĀĀĀĀąąĄĄĄāĀĀĀĀĀ",
+      "ĀĀĀĀĀąąąąāĀĀĀĀĀĀ",
+      "ĀĀĀĀĀăĄĄāĀĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀāāĀĀĀĀĀĀĀĀ"
+    ],
+    "paintKey": {
+      "Ā": "rgb-fef5e6",
+      "ā": "rgb-f8efe1",
+      "Ă": "rgb-85a862",
+      "ă": "rgb-d0c4b9",
+      "Ą": "rgb-6e4570",
+      "ą": "rgb-825791"
+    },
+    "portraitId": "raster-fruit-grapes",
+    "columns": [
+      [
+        {
+          "color": "rgb-f8efe1",
+          "count": 22,
+          "jarId": "jar-1"
+        },
+        {
+          "color": "rgb-f8efe1",
+          "count": 10,
+          "jarId": "jar-6"
+        }
+      ],
+      [
+        {
+          "color": "rgb-fef5e6",
+          "count": 128,
+          "jarId": "jar-3"
+        },
+        {
+          "color": "rgb-85a862",
+          "count": 15,
+          "jarId": "jar-4"
+        }
+      ],
+      [
+        {
+          "color": "rgb-6e4570",
+          "count": 2,
+          "jarId": "jar-2"
+        },
+        {
+          "color": "rgb-d0c4b9",
+          "count": 16,
+          "jarId": "jar-5"
+        },
+        {
+          "color": "rgb-85a862",
+          "count": 1,
+          "jarId": "jar-7"
+        },
+        {
+          "color": "rgb-6e4570",
+          "count": 22,
+          "jarId": "jar-8"
+        },
+        {
+          "color": "rgb-6e4570",
+          "count": 8,
+          "jarId": "jar-9"
+        }
+      ],
+      [
+        {
+          "color": "rgb-825791",
+          "count": 32,
+          "jarId": "jar-10",
+          "lockId": "lock-1"
+        }
+      ]
+    ],
+    "maxSlots": 5,
+    "palette": {
+      "rgb-fef5e6": {
+        "id": "rgb-fef5e6",
+        "name": "rgb-fef5e6",
+        "fill": "#fef5e6",
+        "glow": "#fef5e6",
+        "ink": "#241b22"
+      },
+      "rgb-f8efe1": {
+        "id": "rgb-f8efe1",
+        "name": "rgb-f8efe1",
+        "fill": "#f8efe1",
+        "glow": "#f8efe1",
+        "ink": "#241b22"
+      },
+      "rgb-85a862": {
+        "id": "rgb-85a862",
+        "name": "rgb-85a862",
+        "fill": "#85a862",
+        "glow": "#85a862",
+        "ink": "#241b22"
+      },
+      "rgb-d0c4b9": {
+        "id": "rgb-d0c4b9",
+        "name": "rgb-d0c4b9",
+        "fill": "#d0c4b9",
+        "glow": "#d0c4b9",
+        "ink": "#241b22"
+      },
+      "rgb-6e4570": {
+        "id": "rgb-6e4570",
+        "name": "rgb-6e4570",
+        "fill": "#6e4570",
+        "glow": "#6e4570",
+        "ink": "#fff9ed"
+      },
+      "rgb-825791": {
+        "id": "rgb-825791",
+        "name": "rgb-825791",
+        "fill": "#825791",
+        "glow": "#825791",
+        "ink": "#fff9ed"
+      }
+    },
+    "artwork": {
+      "kind": "raster",
+      "portraitId": "raster-fruit-grapes",
+      "sourceHash": "5befb00754216674c9bd423bb44f43cd23f67e6d3dcff7b989d4960690bd9513",
+      "normalizedHash": "3bdc7a3960bfc7bdb0bf324c7ed8133025848a1c9f95fc67438d121a2ea607a3",
+      "width": 2048,
+      "height": 2048,
+      "asset": "/library/assets/3bdc7a3960bfc7bdb0bf324c7ed8133025848a1c9f95fc67438d121a2ea607a3.png",
+      "crop": {
+        "x": 273,
+        "y": 279,
+        "size": 1503
+      },
+      "alpha": {
+        "mode": "composite",
+        "matte": [
+          255,
+          246,
+          227
+        ]
+      },
+      "samplerVersion": "area-linear-premultiplied-rgba-v1",
+      "quantizerVersion": "deterministic-median-cut-v1",
+      "revealHash": "8c44f7340e470c8938755fa01441a279abf027abff8c8f04b5d01ef9b0b5f086",
+      "revealAsset": "/library/assets/8c44f7340e470c8938755fa01441a279abf027abff8c8f04b5d01ef9b0b5f086.png",
+      "revealSize": 768,
+      "revealVersion": "same-crop-linear-area-v1"
+    },
+    "generation": {
+      "version": 1,
+      "seed": "assist4240-v1:grapes",
+      "requestedSeed": "assist4240-v1:grapes",
+      "planAttempt": 1,
+      "target": 10,
+      "jarCount": 10,
+      "pairCount": 0,
+      "recipe": {
+        "id": "keys",
+        "keys": 1,
+        "pairs": 0
+      },
+      "witness": [
+        0,
+        2,
+        1,
+        1,
+        2,
+        0,
+        2,
+        2,
+        2,
+        3
+      ],
+      "totalConsumption": 256,
+      "collectibles": 256,
+      "cargoTotal": 256,
+      "stepSemantics": "jar-selections-v1"
+    },
+    "verification": {
+      "status": "engine-witness-verified",
+      "reason": null,
+      "counts": {
+        "selections": 10,
+        "selectedJars": 10,
+        "consumed": 256,
+        "collected": 256,
+        "returned": 256,
+        "cleared": 256,
+        "breaks": 0,
+        "unlocks": 1
+      },
+      "steps": 265,
+      "totalConsumption": 256,
+      "collectibles": 256,
+      "cargoTotal": 256,
+      "firstClear": {
+        "cell": {
+          "x": 1,
+          "y": 0
+        },
+        "selection": 1
+      },
+      "witness": [
+        0,
+        2,
+        1,
+        1,
+        2,
+        0,
+        2,
+        2,
+        2,
+        3
+      ],
+      "finalStatus": "won",
+      "keyPolicy": "actual shared reveal and flight acknowledgement, headless serialized adapter (not wall-clock animation proof)",
+      "contractVersion": 3,
+      "queueContractVersion": 1,
+      "engine": "src/game/engine.js",
+      "uiReady": true,
+      "assistUses": 0,
+      "ratingStars": 3
+    },
+    "baseLevelId": "fruit-grapes",
+    "experimental": true,
+    "sourceMeta": {
+      "season": {
+        "id": "fruit-season",
+        "name": "果实之季",
+        "order": 2
+      },
+      "theme": {
+        "id": "fruit-study",
+        "name": "果园拾光",
+        "order": 1
+      },
+      "night": 4,
+      "paintingName": "葡萄"
+    },
+    "consumptionOverlay": {
+      "version": 1,
+      "cells": [],
+      "blocks": []
+    },
+    "queueMechanics": {
+      "version": 1,
+      "recipe": {
+        "id": "keys",
+        "keys": 1,
+        "pairs": 0
+      },
+      "keys": [
+        {
+          "id": "key-1",
+          "lockId": "lock-1",
+          "cell": {
+            "x": 0,
+            "y": 0
+          },
+          "placement": "under source boundary cell; different color from locked jar; all key-color units remain unlocked; reveal only on real clearing"
+        }
+      ],
+      "locks": [
+        {
+          "id": "lock-1",
+          "keyId": "key-1",
+          "jarId": "jar-10"
+        }
+      ]
+    },
+    "assistPolicy": {
+      "version": 2,
+      "enabled": [
+        "extra-slot",
+        "rear-pick",
+        "random-twelve",
+        "absorb-slot"
+      ]
+    },
+    "assistTeaching": {
+      "version": 1,
+      "kind": "random-twelve",
+      "optional": true
+    }
+  },
+  "scene": null
+}

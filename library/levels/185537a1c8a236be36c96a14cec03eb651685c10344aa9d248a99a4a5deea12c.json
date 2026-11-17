@@ -1,0 +1,376 @@
+{
+  "schemaVersion": 1,
+  "sourceCatalogSha256": "2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78",
+  "level": {
+    "id": "fruit-strawberry-silk-pair-lab-4232",
+    "name": "草莓",
+    "subtitle": "第5晚",
+    "mechanism": "layered-collectible-v2",
+    "meta": {
+      "season": {
+        "id": "experimental-4232",
+        "name": "剪丝试验 · 待审核",
+        "order": 120
+      },
+      "theme": {
+        "id": "silk-pair",
+        "name": "剪丝与双罐",
+        "order": 4
+      },
+      "night": 5,
+      "paintingName": "草莓"
+    },
+    "width": 16,
+    "height": 16,
+    "cover": [
+      "ĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĀĂąĂĀĀĀĀĀĀ",
+      "ĀĀĀĀĂąĂĂąĂąĂĀĀĀĀ",
+      "ĀĀĀĀĂĄĄĄĄĄĄĂĀĀĀĀ",
+      "ĀĀĀĂāāĄąąĄāāĂĀĀĀ",
+      "ĀĀĂāāāāāāāāāāĂĀĀ",
+      "ĀĀĂāăāăāăăāāāĂĀĀ",
+      "ĀĀĂāāāāăāąăāăĂĀĀ",
+      "ĀĀĂāāāāāāāāāāĂĀĀ",
+      "ĀĀĂāăāăāăāāāāĂĀĀ",
+      "ĀĀĀĂāāāāāăăāĂĀĀĀ",
+      "ĀĀĀĂąāāăāāāāĂĀĀĀ",
+      "ĀĀĀĀĂāăāăāāĂĀĀĀĀ",
+      "ĀĀĀĀĀĂāăāāĂĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĂāāĂĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĀĂĀĀĀĀĀĀĀĀ"
+    ],
+    "coverKey": {
+      "Ā": "rgb-fff4e7",
+      "ā": "rgb-e54738",
+      "Ă": "rgb-ddcfc2",
+      "ă": "rgb-f27338",
+      "Ą": "rgb-619e4f",
+      "ą": "rgb-9b8b5d"
+    },
+    "paint": [
+      "ĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĀĂąĂĀĀĀĀĀĀ",
+      "ĀĀĀĀĂąĂĂąĂąĂĀĀĀĀ",
+      "ĀĀĀĀĂĄĄĄĄĄĄĂĀĀĀĀ",
+      "ĀĀĀĂāāĄąąĄāāĂĀĀĀ",
+      "ĀĀĂāāāāāāāāāāĂĀĀ",
+      "ĀĀĂāăāăāăăāāāĂĀĀ",
+      "ĀĀĂāāāāăāąăāăĂĀĀ",
+      "ĀĀĂāāāāāāāāāāĂĀĀ",
+      "ĀĀĂāăāăāăāāāāĂĀĀ",
+      "ĀĀĀĂāāāāāăăāĂĀĀĀ",
+      "ĀĀĀĂąāāăāāāāĂĀĀĀ",
+      "ĀĀĀĀĂāăāăāāĂĀĀĀĀ",
+      "ĀĀĀĀĀĂāăāāĂĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĂāāĂĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĀĂĀĀĀĀĀĀĀĀ"
+    ],
+    "paintKey": {
+      "Ā": "rgb-fff4e7",
+      "ā": "rgb-e54738",
+      "Ă": "rgb-ddcfc2",
+      "ă": "rgb-f27338",
+      "Ą": "rgb-619e4f",
+      "ą": "rgb-9b8b5d"
+    },
+    "portraitId": "raster-fruit-strawberry",
+    "columns": [
+      [
+        {
+          "jarId": "silk-tool-1",
+          "toolType": "silk-cutter",
+          "count": 5
+        },
+        {
+          "color": "rgb-ddcfc2",
+          "count": 1,
+          "jarId": "jar-1",
+          "pairId": "pair-1"
+        },
+        {
+          "color": "rgb-e54738",
+          "count": 62,
+          "jarId": "jar-3"
+        },
+        {
+          "color": "rgb-e54738",
+          "count": 1,
+          "jarId": "jar-7"
+        },
+        {
+          "color": "rgb-f27338",
+          "count": 12,
+          "jarId": "jar-8"
+        }
+      ],
+      [
+        {
+          "color": "rgb-fff4e7",
+          "count": 128,
+          "jarId": "jar-2",
+          "pairId": "pair-1"
+        },
+        {
+          "color": "rgb-ddcfc2",
+          "count": 31,
+          "jarId": "jar-4"
+        },
+        {
+          "color": "rgb-e54738",
+          "count": 1,
+          "jarId": "jar-10"
+        }
+      ],
+      [
+        {
+          "color": "rgb-9b8b5d",
+          "count": 8,
+          "jarId": "jar-5"
+        },
+        {
+          "color": "rgb-f27338",
+          "count": 4,
+          "jarId": "jar-9"
+        }
+      ],
+      [
+        {
+          "color": "rgb-619e4f",
+          "count": 8,
+          "jarId": "jar-6"
+        }
+      ]
+    ],
+    "maxSlots": 5,
+    "palette": {
+      "rgb-fff4e7": {
+        "id": "rgb-fff4e7",
+        "name": "rgb-fff4e7",
+        "fill": "#fff4e7",
+        "glow": "#fff4e7",
+        "ink": "#241b22"
+      },
+      "rgb-e54738": {
+        "id": "rgb-e54738",
+        "name": "rgb-e54738",
+        "fill": "#e54738",
+        "glow": "#e54738",
+        "ink": "#fff9ed"
+      },
+      "rgb-ddcfc2": {
+        "id": "rgb-ddcfc2",
+        "name": "rgb-ddcfc2",
+        "fill": "#ddcfc2",
+        "glow": "#ddcfc2",
+        "ink": "#241b22"
+      },
+      "rgb-f27338": {
+        "id": "rgb-f27338",
+        "name": "rgb-f27338",
+        "fill": "#f27338",
+        "glow": "#f27338",
+        "ink": "#fff9ed"
+      },
+      "rgb-619e4f": {
+        "id": "rgb-619e4f",
+        "name": "rgb-619e4f",
+        "fill": "#619e4f",
+        "glow": "#619e4f",
+        "ink": "#fff9ed"
+      },
+      "rgb-9b8b5d": {
+        "id": "rgb-9b8b5d",
+        "name": "rgb-9b8b5d",
+        "fill": "#9b8b5d",
+        "glow": "#9b8b5d",
+        "ink": "#fff9ed"
+      }
+    },
+    "artwork": {
+      "kind": "raster",
+      "portraitId": "raster-fruit-strawberry",
+      "sourceHash": "34b8eea5d4b371f5a5073d2c828b1305d21f628f88d04bed31604eafec1ce0bf",
+      "normalizedHash": "aeed4648ed536badf8aa63329d385b6a7ee4a8874ea5de97fe9ceb6cdc68e832",
+      "width": 2048,
+      "height": 2048,
+      "asset": "/library/assets/aeed4648ed536badf8aa63329d385b6a7ee4a8874ea5de97fe9ceb6cdc68e832.png",
+      "crop": {
+        "x": 265,
+        "y": 252,
+        "size": 1518
+      },
+      "alpha": {
+        "mode": "composite",
+        "matte": [
+          255,
+          246,
+          227
+        ]
+      },
+      "samplerVersion": "area-linear-premultiplied-rgba-v1",
+      "quantizerVersion": "deterministic-median-cut-v1",
+      "revealHash": "71a5a824ac3e5ce54e6d161eaf1cedbd58f6a378e4e03e8787ef6721cc6c947f",
+      "revealAsset": "/library/assets/71a5a824ac3e5ce54e6d161eaf1cedbd58f6a378e4e03e8787ef6721cc6c947f.png",
+      "revealSize": 768,
+      "revealVersion": "same-crop-linear-area-v1"
+    },
+    "generation": {
+      "version": 1,
+      "seed": "silk4232-v1:strawberry",
+      "target": 10,
+      "jarCount": 11,
+      "pairCount": 1,
+      "recipe": {
+        "id": "silk-pair",
+        "pairs": 1,
+        "keys": 0
+      },
+      "witness": [
+        0,
+        0,
+        0,
+        1,
+        2,
+        3,
+        0,
+        0,
+        2,
+        1
+      ],
+      "totalConsumption": 261,
+      "coloredConsumption": 256,
+      "toolConsumption": 5,
+      "collectibles": 256,
+      "cargoTotal": 256,
+      "stepSemantics": "atomic-selections-v1"
+    },
+    "verification": {
+      "status": "engine-witness-verified",
+      "reason": null,
+      "counts": {
+        "selections": 10,
+        "selectedJars": 11,
+        "consumed": 261,
+        "collected": 256,
+        "returned": 256,
+        "cleared": 256,
+        "breaks": 0,
+        "unlocks": 0,
+        "toolConsumed": 5
+      },
+      "steps": 269,
+      "totalConsumption": 261,
+      "coloredConsumption": 256,
+      "toolConsumption": 5,
+      "collectibles": 256,
+      "cargoTotal": 256,
+      "firstClear": {
+        "cell": {
+          "x": 7,
+          "y": 15
+        },
+        "selection": 2
+      },
+      "witness": [
+        0,
+        0,
+        0,
+        1,
+        2,
+        3,
+        0,
+        0,
+        2,
+        1
+      ],
+      "finalStatus": "won",
+      "keyPolicy": "actual shared reveal and flight acknowledgement, headless serialized adapter (not wall-clock animation proof)",
+      "contractVersion": 3,
+      "queueContractVersion": 1,
+      "silkContractVersion": 1,
+      "engine": "src/game/engine.js",
+      "uiReady": true
+    },
+    "baseLevelId": "fruit-strawberry",
+    "experimental": true,
+    "sourceMeta": {
+      "season": {
+        "id": "fruit-season",
+        "name": "果实之季",
+        "order": 2
+      },
+      "theme": {
+        "id": "fruit-study",
+        "name": "果园拾光",
+        "order": 1
+      },
+      "night": 5,
+      "paintingName": "草莓"
+    },
+    "consumptionOverlay": {
+      "version": 1,
+      "cells": [],
+      "blocks": []
+    },
+    "queueMechanics": {
+      "version": 1,
+      "recipe": {
+        "id": "silk-pair",
+        "keys": 0,
+        "pairs": 1
+      },
+      "keys": [],
+      "locks": []
+    },
+    "silkMechanics": {
+      "version": 1,
+      "webs": [
+        {
+          "id": "web-1",
+          "toolType": "silk-cutter",
+          "cells": [
+            {
+              "x": 4,
+              "y": 10
+            },
+            {
+              "x": 5,
+              "y": 10
+            },
+            {
+              "x": 5,
+              "y": 9
+            }
+          ],
+          "remaining": 3
+        },
+        {
+          "id": "web-2",
+          "toolType": "silk-cutter",
+          "cells": [
+            {
+              "x": 1,
+              "y": 9
+            },
+            {
+              "x": 1,
+              "y": 8
+            },
+            {
+              "x": 1,
+              "y": 10
+            }
+          ],
+          "remaining": 2
+        }
+      ],
+      "recipe": {
+        "id": "silk-pair",
+        "pairs": 1,
+        "keys": 0
+      }
+    }
+  },
+  "scene": null
+}

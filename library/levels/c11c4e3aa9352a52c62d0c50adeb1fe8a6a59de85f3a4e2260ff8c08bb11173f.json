@@ -1,0 +1,476 @@
+{
+  "schemaVersion": 1,
+  "sourceCatalogSha256": "2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78",
+  "level": {
+    "id": "night-voyage",
+    "name": "夜航",
+    "subtitle": "第二关",
+    "blurb": "被围住的光点暂时够不着。选得太早，小精灵会占着槽位一直等。",
+    "width": 16,
+    "height": 16,
+    "cover": [
+      "VVVVVVVVVVVVVVVV",
+      "VVVVVVVVVVVGGGVV",
+      "VVVVVVVVVVGGGGVV",
+      "VVVVVVVVVVGGGGVV",
+      "VVVWWWWVVVVGGVVV",
+      "VVVWWWVVVVVVVVVV",
+      "VVVWWRRRRRRRRVVV",
+      "VTTWRRRRRRRRRTTV",
+      "VTTTRRRRRRRRRTTV",
+      "VTTTRRRBBRRRRTTV",
+      "VTTTRRRBBRRRRTTV",
+      "VTTTRRRRRRRRRTTV",
+      "VTTTTTTRRRRGGTTV",
+      "VTTTTTTTTTTGGGTV",
+      "VTTTTTTTTTTGGGTV",
+      "VVVVVVVVVVVVVVVV"
+    ],
+    "coverKey": {
+      "W": "cream",
+      "C": "coral",
+      "T": "teal",
+      "G": "gold",
+      "V": "violet",
+      "M": "moss",
+      "S": "sky",
+      "B": "blush",
+      "R": "rust",
+      "I": "ink"
+    },
+    "paint": [
+      "VVVVVVVVVVVVVVVV",
+      "VVVVVVVVVVVGGGVV",
+      "VVVVVVVVVVGGGGVV",
+      "VVVVVVVVVVGGGGVV",
+      "VVVWWWWVVVVGGVVV",
+      "VVVWWWVVVVVVVVVV",
+      "VVVWWRRRRRRRRVVV",
+      "VTTWRRRRRRRRRTTV",
+      "VTTTRRRRRRRRRTTV",
+      "VTTTRRRBBRRRRTTV",
+      "VTTTRRRBBRRRRTTV",
+      "VTTTRRRRRRRRRTTV",
+      "VTTTTTTRRRRGGTTV",
+      "VTTTTTTTTTTGGGTV",
+      "VTTTTTTTTTTGGGTV",
+      "VVVVVVVVVVVVVVVV"
+    ],
+    "paintKey": {
+      "W": "cream",
+      "C": "coral",
+      "T": "teal",
+      "G": "gold",
+      "V": "violet",
+      "M": "moss",
+      "S": "sky",
+      "B": "blush",
+      "R": "rust",
+      "I": "ink"
+    },
+    "portraitId": "night-voyage",
+    "columns": [
+      [
+        {
+          "color": "violet",
+          "count": 60
+        },
+        {
+          "color": "gold",
+          "count": 13
+        }
+      ],
+      [
+        {
+          "color": "teal",
+          "count": 40
+        },
+        {
+          "color": "rust",
+          "count": 53
+        }
+      ],
+      [
+        {
+          "color": "cream",
+          "count": 10
+        },
+        {
+          "color": "blush",
+          "count": 4
+        },
+        {
+          "color": "gold",
+          "count": 8
+        }
+      ],
+      [
+        {
+          "color": "violet",
+          "count": 54
+        },
+        {
+          "color": "teal",
+          "count": 14
+        }
+      ]
+    ],
+    "maxSlots": 5,
+    "total": 256,
+    "counts": {
+      "violet": 114,
+      "gold": 21,
+      "cream": 10,
+      "rust": 53,
+      "teal": 54,
+      "blush": 4
+    },
+    "mechanism": "collectible-v1",
+    "meta": {
+      "season": {
+        "id": "first-light",
+        "name": "拾光初季",
+        "order": 1
+      },
+      "theme": {
+        "id": "windows-and-voyages",
+        "name": "窗与远行",
+        "order": 1
+      },
+      "night": 2,
+      "paintingName": "夜航"
+    },
+    "palette": {
+      "cream": {
+        "id": "cream",
+        "name": "米白",
+        "fill": "#F3E2C0",
+        "ink": "#5A4030",
+        "glow": "#FFF6DF"
+      },
+      "coral": {
+        "id": "coral",
+        "name": "珊瑚",
+        "fill": "#E05A4F",
+        "ink": "#FFF5F2",
+        "glow": "#FF8F84"
+      },
+      "teal": {
+        "id": "teal",
+        "name": "青石",
+        "fill": "#2F7A74",
+        "ink": "#F3FFFB",
+        "glow": "#5ECFC4"
+      },
+      "gold": {
+        "id": "gold",
+        "name": "金黄",
+        "fill": "#E6B03A",
+        "ink": "#3A2A08",
+        "glow": "#FFE28A"
+      },
+      "violet": {
+        "id": "violet",
+        "name": "暮紫",
+        "fill": "#6A4C93",
+        "ink": "#F6F0FF",
+        "glow": "#B389E6"
+      },
+      "moss": {
+        "id": "moss",
+        "name": "苔绿",
+        "fill": "#5B8C3E",
+        "ink": "#F3FFE8",
+        "glow": "#A5D67A"
+      },
+      "sky": {
+        "id": "sky",
+        "name": "晴蓝",
+        "fill": "#3A8FD0",
+        "ink": "#F0F8FF",
+        "glow": "#8FCBFF"
+      },
+      "blush": {
+        "id": "blush",
+        "name": "粉霞",
+        "fill": "#E58AA8",
+        "ink": "#3A1520",
+        "glow": "#FFC0D4"
+      },
+      "rust": {
+        "id": "rust",
+        "name": "赭石",
+        "fill": "#B45A2A",
+        "ink": "#FFF4EA",
+        "glow": "#E08A54"
+      },
+      "ink": {
+        "id": "ink",
+        "name": "墨色",
+        "fill": "#3A3550",
+        "ink": "#F2F0FF",
+        "glow": "#8A82B0"
+      }
+    },
+    "verification": {
+      "status": "legacy-preserved",
+      "basis": "published-4218"
+    },
+    "artwork": {
+      "kind": "legacy",
+      "portraitId": "night-voyage"
+    }
+  },
+  "scene": {
+    "id": "night-voyage",
+    "name": "夜航",
+    "width": 16,
+    "height": 16,
+    "layout": {
+      "sky": {
+        "color": "violet"
+      },
+      "moon": {
+        "u": 0.76,
+        "v": 0.18,
+        "r": 0.125,
+        "color": "gold"
+      },
+      "water": {
+        "v0": 0.46,
+        "color": "teal"
+      },
+      "path": {
+        "u": 0.76,
+        "v0": 0.52,
+        "half": 0.1,
+        "color": "gold"
+      },
+      "hull": {
+        "u0": 0.26,
+        "v0": 0.38,
+        "u1": 0.84,
+        "v1": 0.84,
+        "color": "rust"
+      },
+      "sail": {
+        "u0": 0.16,
+        "v0": 0.22,
+        "u1": 0.52,
+        "v1": 0.52,
+        "color": "cream"
+      },
+      "windows": [
+        {
+          "u": 0.46,
+          "v": 0.62,
+          "r": 0.05,
+          "color": "blush"
+        },
+        {
+          "u": 0.54,
+          "v": 0.62,
+          "r": 0.05,
+          "color": "blush"
+        }
+      ]
+    },
+    "cover": [
+      "VVVVVVVVVVVVVVVV",
+      "VVVVVVVVVVVGGGVV",
+      "VVVVVVVVVVGGGGVV",
+      "VVVVVVVVVVGGGGVV",
+      "VVVWWWWVVVVGGVVV",
+      "VVVWWWVVVVVVVVVV",
+      "VVVWWRRRRRRRRVVV",
+      "VTTWRRRRRRRRRTTV",
+      "VTTTRRRRRRRRRTTV",
+      "VTTTRRRBBRRRRTTV",
+      "VTTTRRRBBRRRRTTV",
+      "VTTTRRRRRRRRRTTV",
+      "VTTTTTTRRRRGGTTV",
+      "VTTTTTTTTTTGGGTV",
+      "VTTTTTTTTTTGGGTV",
+      "VVVVVVVVVVVVVVVV"
+    ],
+    "coverKey": {
+      "W": "cream",
+      "C": "coral",
+      "T": "teal",
+      "G": "gold",
+      "V": "violet",
+      "M": "moss",
+      "S": "sky",
+      "B": "blush",
+      "R": "rust",
+      "I": "ink"
+    },
+    "anchors": [
+      {
+        "id": "moon",
+        "x": 12,
+        "y": 2,
+        "color": "gold",
+        "feature": "moon"
+      },
+      {
+        "id": "moon-glow",
+        "x": 11,
+        "y": 4,
+        "color": "gold",
+        "feature": "moon"
+      },
+      {
+        "id": "sky",
+        "x": 3,
+        "y": 1,
+        "color": "violet",
+        "feature": "sky"
+      },
+      {
+        "id": "sail",
+        "x": 5,
+        "y": 5,
+        "color": "cream",
+        "feature": "sail"
+      },
+      {
+        "id": "hull",
+        "x": 9,
+        "y": 9,
+        "color": "rust",
+        "feature": "hull"
+      },
+      {
+        "id": "window",
+        "x": 7,
+        "y": 9,
+        "color": "blush",
+        "feature": "window"
+      },
+      {
+        "id": "water",
+        "x": 4,
+        "y": 14,
+        "color": "teal",
+        "feature": "water"
+      },
+      {
+        "id": "path",
+        "x": 12,
+        "y": 12,
+        "color": "gold",
+        "feature": "path"
+      },
+      {
+        "id": "border",
+        "x": 0,
+        "y": 7,
+        "color": "violet",
+        "feature": "sky"
+      }
+    ],
+    "highlights": [
+      [
+        11,
+        1
+      ],
+      [
+        12,
+        1
+      ],
+      [
+        13,
+        1
+      ],
+      [
+        10,
+        2
+      ],
+      [
+        11,
+        2
+      ],
+      [
+        12,
+        2
+      ],
+      [
+        13,
+        2
+      ],
+      [
+        10,
+        3
+      ],
+      [
+        11,
+        3
+      ],
+      [
+        12,
+        3
+      ],
+      [
+        13,
+        3
+      ],
+      [
+        11,
+        4
+      ],
+      [
+        12,
+        4
+      ],
+      [
+        7,
+        9
+      ],
+      [
+        8,
+        9
+      ],
+      [
+        7,
+        10
+      ],
+      [
+        8,
+        10
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        12,
+        12
+      ],
+      [
+        11,
+        13
+      ],
+      [
+        12,
+        13
+      ],
+      [
+        13,
+        13
+      ],
+      [
+        11,
+        14
+      ],
+      [
+        12,
+        14
+      ],
+      [
+        13,
+        14
+      ]
+    ]
+  }
+}

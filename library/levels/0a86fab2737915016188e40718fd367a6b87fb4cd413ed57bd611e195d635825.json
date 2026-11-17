@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 1,
+  "sourceCatalogSha256": "2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78",
+  "level": {
+    "id": "fruit-grapes",
+    "name": "葡萄",
+    "subtitle": "第4晚",
+    "mechanism": "collectible-v1",
+    "meta": {
+      "season": {
+        "id": "fruit-season",
+        "name": "果实之季",
+        "order": 2
+      },
+      "theme": {
+        "id": "fruit-study",
+        "name": "果园拾光",
+        "order": 1
+      },
+      "night": 4,
+      "paintingName": "葡萄"
+    },
+    "width": 16,
+    "height": 16,
+    "cover": [
+      "ĀāāāĀāāāāāāāāāāĀ",
+      "āĀāāĀāĂăĀĂăāāĀĀĀ",
+      "ĀĀĀāĂĂĂĂăăĀĀĀĀĀĀ",
+      "ĀĀĀăĂĂĂĂĄăāĀĀĀĀĀ",
+      "ĀĀĀăĂĂĂĂĄāĂāĀĀĀĀ",
+      "ĀĀĀāąĄĄąąĄąĄăĀĀĀ",
+      "ĀĀĀĂąąĄąąĄąąąĀĀĀ",
+      "ĀĀĀăąąĄąąĄĄĄăĀĀĀ",
+      "ĀĀĀāĄĄĄĄĄąąăĀĀĀĀ",
+      "ĀĀĀāĄąąąĄąąăĀĀĀĀ",
+      "ĀĀĀāĄĄąąĄąĄăĀĀĀĀ",
+      "ĀĀĀĀăąĄĄĄĄăĀĀĀĀĀ",
+      "ĀĀĀĀĀąąĄĄĄāĀĀĀĀĀ",
+      "ĀĀĀĀĀąąąąāĀĀĀĀĀĀ",
+      "ĀĀĀĀĀăĄĄāĀĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀāāĀĀĀĀĀĀĀĀ"
+    ],
+    "coverKey": {
+      "Ā": "rgb-fef5e6",
+      "ā": "rgb-f8efe1",
+      "Ă": "rgb-85a862",
+      "ă": "rgb-d0c4b9",
+      "Ą": "rgb-6e4570",
+      "ą": "rgb-825791"
+    },
+    "paint": [
+      "ĀāāāĀāāāāāāāāāāĀ",
+      "āĀāāĀāĂăĀĂăāāĀĀĀ",
+      "ĀĀĀāĂĂĂĂăăĀĀĀĀĀĀ",
+      "ĀĀĀăĂĂĂĂĄăāĀĀĀĀĀ",
+      "ĀĀĀăĂĂĂĂĄāĂāĀĀĀĀ",
+      "ĀĀĀāąĄĄąąĄąĄăĀĀĀ",
+      "ĀĀĀĂąąĄąąĄąąąĀĀĀ",
+      "ĀĀĀăąąĄąąĄĄĄăĀĀĀ",
+      "ĀĀĀāĄĄĄĄĄąąăĀĀĀĀ",
+      "ĀĀĀāĄąąąĄąąăĀĀĀĀ",
+      "ĀĀĀāĄĄąąĄąĄăĀĀĀĀ",
+      "ĀĀĀĀăąĄĄĄĄăĀĀĀĀĀ",
+      "ĀĀĀĀĀąąĄĄĄāĀĀĀĀĀ",
+      "ĀĀĀĀĀąąąąāĀĀĀĀĀĀ",
+      "ĀĀĀĀĀăĄĄāĀĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀāāĀĀĀĀĀĀĀĀ"
+    ],
+    "paintKey": {
+      "Ā": "rgb-fef5e6",
+      "ā": "rgb-f8efe1",
+      "Ă": "rgb-85a862",
+      "ă": "rgb-d0c4b9",
+      "Ą": "rgb-6e4570",
+      "ą": "rgb-825791"
+    },
+    "portraitId": "raster-fruit-grapes",
+    "columns": [
+      [
+        {
+          "color": "rgb-fef5e6",
+          "count": 127
+        },
+        {
+          "color": "rgb-f8efe1",
+          "count": 17
+        },
+        {
+          "color": "rgb-825791",
+          "count": 27
+        }
+      ],
+      [
+        {
+          "color": "rgb-d0c4b9",
+          "count": 15
+        },
+        {
+          "color": "rgb-d0c4b9",
+          "count": 1
+        }
+      ],
+      [
+        {
+          "color": "rgb-f8efe1",
+          "count": 15
+        },
+        {
+          "color": "rgb-85a862",
+          "count": 16
+        },
+        {
+          "color": "rgb-fef5e6",
+          "count": 1
+        }
+      ],
+      [
+        {
+          "color": "rgb-6e4570",
+          "count": 32
+        },
+        {
+          "color": "rgb-825791",
+          "count": 5
+        }
+      ]
+    ],
+    "maxSlots": 5,
+    "palette": {
+      "rgb-fef5e6": {
+        "id": "rgb-fef5e6",
+        "name": "rgb-fef5e6",
+        "fill": "#fef5e6",
+        "glow": "#fef5e6",
+        "ink": "#241b22"
+      },
+      "rgb-f8efe1": {
+        "id": "rgb-f8efe1",
+        "name": "rgb-f8efe1",
+        "fill": "#f8efe1",
+        "glow": "#f8efe1",
+        "ink": "#241b22"
+      },
+      "rgb-85a862": {
+        "id": "rgb-85a862",
+        "name": "rgb-85a862",
+        "fill": "#85a862",
+        "glow": "#85a862",
+        "ink": "#241b22"
+      },
+      "rgb-d0c4b9": {
+        "id": "rgb-d0c4b9",
+        "name": "rgb-d0c4b9",
+        "fill": "#d0c4b9",
+        "glow": "#d0c4b9",
+        "ink": "#241b22"
+      },
+      "rgb-6e4570": {
+        "id": "rgb-6e4570",
+        "name": "rgb-6e4570",
+        "fill": "#6e4570",
+        "glow": "#6e4570",
+        "ink": "#fff9ed"
+      },
+      "rgb-825791": {
+        "id": "rgb-825791",
+        "name": "rgb-825791",
+        "fill": "#825791",
+        "glow": "#825791",
+        "ink": "#fff9ed"
+      }
+    },
+    "artwork": {
+      "kind": "raster",
+      "portraitId": "raster-fruit-grapes",
+      "sourceHash": "5befb00754216674c9bd423bb44f43cd23f67e6d3dcff7b989d4960690bd9513",
+      "normalizedHash": "3bdc7a3960bfc7bdb0bf324c7ed8133025848a1c9f95fc67438d121a2ea607a3",
+      "width": 2048,
+      "height": 2048,
+      "asset": "/library/assets/3bdc7a3960bfc7bdb0bf324c7ed8133025848a1c9f95fc67438d121a2ea607a3.png",
+      "crop": {
+        "x": 273,
+        "y": 279,
+        "size": 1503
+      },
+      "alpha": {
+        "mode": "composite",
+        "matte": [
+          255,
+          246,
+          227
+        ]
+      },
+      "samplerVersion": "area-linear-premultiplied-rgba-v1",
+      "quantizerVersion": "deterministic-median-cut-v1",
+      "revealHash": "8c44f7340e470c8938755fa01441a279abf027abff8c8f04b5d01ef9b0b5f086",
+      "revealAsset": "/library/assets/8c44f7340e470c8938755fa01441a279abf027abff8c8f04b5d01ef9b0b5f086.png",
+      "revealSize": 768,
+      "revealVersion": "same-crop-linear-area-v1"
+    },
+    "generation": {
+      "target": 10,
+      "seed": "fruit-batch-v1:5befb00754216674c9bd423bb44f43cd23f67e6d3dcff7b989d4960690bd9513",
+      "requestedColors": 6,
+      "actualColors": 6
+    },
+    "verification": {
+      "status": "engine-witness-verified",
+      "model": "base-collectible-settled-engine-v1",
+      "witness": [
+        0,
+        1,
+        3,
+        2,
+        0,
+        2,
+        2,
+        0,
+        3,
+        1
+      ],
+      "proofVersion": "full-color-closure-v1",
+      "peakSlotsWitness": 1,
+      "operations": 11776,
+      "attempts": 2,
+      "stepSemantics": "legal-jar-selections",
+      "optimality": "winning-selection-count-equals-positive-jar-count-only"
+    }
+  },
+  "scene": null
+}

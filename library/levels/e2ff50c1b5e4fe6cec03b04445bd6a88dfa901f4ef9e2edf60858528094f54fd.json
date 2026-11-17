@@ -1,0 +1,432 @@
+{
+  "schemaVersion": 1,
+  "sourceCatalogSha256": "2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78",
+  "level": {
+    "id": "fruit-watermelon-silk-ice-lab-4232",
+    "name": "西瓜",
+    "subtitle": "第2晚",
+    "mechanism": "layered-collectible-v2",
+    "meta": {
+      "season": {
+        "id": "experimental-4232",
+        "name": "剪丝试验 · 待审核",
+        "order": 120
+      },
+      "theme": {
+        "id": "silk-ice",
+        "name": "剪丝与图块",
+        "order": 1
+      },
+      "night": 2,
+      "paintingName": "西瓜"
+    },
+    "width": 16,
+    "height": 16,
+    "cover": [
+      "ĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĀĂĂĀĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĄāāĄĀĀĀĀĀĀ",
+      "ĀĀĀĀĀăāāāāăĀĀĀĀĀ",
+      "ĀĀĀĀĀĄāāāāĄĀĀĀĀĀ",
+      "ĀĀĀĀĄĂāāāāāĄĀĀĀĀ",
+      "ĀĀĀăāāāāāāāāăĀĀĀ",
+      "ĀĀĀĄĂāāāāāāāĄĀĀĀ",
+      "ĀĀăĂāāāāāāāāāăĀĀ",
+      "ĀĀĂāāāāāāāāāāāĀĀ",
+      "ĀĄĂāāāāāāāāāāĂąĀ",
+      "ĀĄąĂĂĂāāāāĂĂăąĄĀ",
+      "ĀăĄąąăĂĂĂăăąąĄăĀ",
+      "ĀĀĀĄĄąąąąąąĄąĀĀĀ",
+      "ĀĀĀĀĀăăąąăăĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀ"
+    ],
+    "coverKey": {
+      "Ā": "rgb-fef2e4",
+      "ā": "rgb-f0574f",
+      "Ă": "rgb-e78671",
+      "ă": "rgb-dacbb6",
+      "Ą": "rgb-a49779",
+      "ą": "rgb-a4c88f"
+    },
+    "paint": [
+      "ĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĀĂĂĀĀĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĄāāĄĀĀĀĀĀĀ",
+      "ĀĀĀĀĀăāāāāăĀĀĀĀĀ",
+      "ĀĀĀĀĀĄāāāāĄĀĀĀĀĀ",
+      "ĀĀĀĀĄĂāāāāāĄĀĀĀĀ",
+      "ĀĀĀăāāāāāāāāăĀĀĀ",
+      "ĀĀĀĄĂāāāāāāāĄĀĀĀ",
+      "ĀĀăĂāāāāāāāāāăĀĀ",
+      "ĀĀĂāāāāāāāāāāāĀĀ",
+      "ĀĄĂāāāāāāāāāāĂąĀ",
+      "ĀĄąĂĂĂāāāāĂĂăąĄĀ",
+      "ĀăĄąąăĂĂĂăăąąĄăĀ",
+      "ĀĀĀĄĄąąąąąąĄąĀĀĀ",
+      "ĀĀĀĀĀăăąąăăĀĀĀĀĀ",
+      "ĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀĀ"
+    ],
+    "paintKey": {
+      "Ā": "rgb-fef2e4",
+      "ā": "rgb-f0574f",
+      "Ă": "rgb-e78671",
+      "ă": "rgb-dacbb6",
+      "Ą": "rgb-a49779",
+      "ą": "rgb-a4c88f"
+    },
+    "portraitId": "raster-fruit-watermelon",
+    "columns": [
+      [
+        {
+          "jarId": "silk-tool-1",
+          "toolType": "silk-cutter",
+          "count": 5
+        },
+        {
+          "color": "rgb-a49779",
+          "count": 17,
+          "jarId": "jar-1"
+        }
+      ],
+      [
+        {
+          "color": "rgb-e78671",
+          "count": 1,
+          "jarId": "jar-2"
+        },
+        {
+          "color": "rgb-dacbb6",
+          "count": 16,
+          "jarId": "jar-3"
+        }
+      ],
+      [
+        {
+          "color": "rgb-fef2e4",
+          "count": 131,
+          "jarId": "jar-4"
+        },
+        {
+          "color": "rgb-e78671",
+          "count": 8,
+          "jarId": "jar-5"
+        },
+        {
+          "color": "rgb-e78671",
+          "count": 4,
+          "jarId": "jar-6"
+        },
+        {
+          "color": "rgb-f0574f",
+          "count": 66,
+          "jarId": "jar-7"
+        }
+      ],
+      [
+        {
+          "color": "rgb-e78671",
+          "count": 5,
+          "jarId": "jar-8"
+        },
+        {
+          "color": "rgb-a4c88f",
+          "count": 18,
+          "jarId": "jar-9"
+        }
+      ]
+    ],
+    "maxSlots": 5,
+    "palette": {
+      "rgb-fef2e4": {
+        "id": "rgb-fef2e4",
+        "name": "rgb-fef2e4",
+        "fill": "#fef2e4",
+        "glow": "#fef2e4",
+        "ink": "#241b22"
+      },
+      "rgb-f0574f": {
+        "id": "rgb-f0574f",
+        "name": "rgb-f0574f",
+        "fill": "#f0574f",
+        "glow": "#f0574f",
+        "ink": "#fff9ed"
+      },
+      "rgb-e78671": {
+        "id": "rgb-e78671",
+        "name": "rgb-e78671",
+        "fill": "#e78671",
+        "glow": "#e78671",
+        "ink": "#241b22"
+      },
+      "rgb-dacbb6": {
+        "id": "rgb-dacbb6",
+        "name": "rgb-dacbb6",
+        "fill": "#dacbb6",
+        "glow": "#dacbb6",
+        "ink": "#241b22"
+      },
+      "rgb-a49779": {
+        "id": "rgb-a49779",
+        "name": "rgb-a49779",
+        "fill": "#a49779",
+        "glow": "#a49779",
+        "ink": "#241b22"
+      },
+      "rgb-a4c88f": {
+        "id": "rgb-a4c88f",
+        "name": "rgb-a4c88f",
+        "fill": "#a4c88f",
+        "glow": "#a4c88f",
+        "ink": "#241b22"
+      }
+    },
+    "artwork": {
+      "kind": "raster",
+      "portraitId": "raster-fruit-watermelon",
+      "sourceHash": "7ce280957338e629c5f80dc07c6c720116ca2eee80bd080ffe117d4c88ff5f1c",
+      "normalizedHash": "4b1d4192ea31e47a9a73e97f02a4537ff5a141f47f89c7a2e0ceffd05ffd8e7d",
+      "width": 2048,
+      "height": 2048,
+      "asset": "/library/assets/4b1d4192ea31e47a9a73e97f02a4537ff5a141f47f89c7a2e0ceffd05ffd8e7d.png",
+      "crop": {
+        "x": 308,
+        "y": 308,
+        "size": 1445
+      },
+      "alpha": {
+        "mode": "composite",
+        "matte": [
+          255,
+          246,
+          227
+        ]
+      },
+      "samplerVersion": "area-linear-premultiplied-rgba-v1",
+      "quantizerVersion": "deterministic-median-cut-v1",
+      "revealHash": "517506dce474ed30f7c872eddb0a09eafb8054896ab276dad10389a5a21ba422",
+      "revealAsset": "/library/assets/517506dce474ed30f7c872eddb0a09eafb8054896ab276dad10389a5a21ba422.png",
+      "revealSize": 768,
+      "revealVersion": "same-crop-linear-area-v1"
+    },
+    "generation": {
+      "version": 1,
+      "seed": "silk4232-v1:watermelon",
+      "target": 10,
+      "jarCount": 10,
+      "pairCount": 0,
+      "recipe": {
+        "id": "silk-ice",
+        "pairs": 0,
+        "keys": 0,
+        "overlay": "ice"
+      },
+      "witness": [
+        0,
+        2,
+        3,
+        1,
+        0,
+        3,
+        1,
+        2,
+        2,
+        2
+      ],
+      "totalConsumption": 271,
+      "coloredConsumption": 266,
+      "toolConsumption": 5,
+      "collectibles": 256,
+      "cargoTotal": 256,
+      "stepSemantics": "jar-selections-v1"
+    },
+    "verification": {
+      "status": "engine-witness-verified",
+      "reason": null,
+      "counts": {
+        "selections": 10,
+        "selectedJars": 10,
+        "consumed": 271,
+        "collected": 256,
+        "returned": 256,
+        "cleared": 256,
+        "breaks": 10,
+        "unlocks": 0,
+        "toolConsumed": 5
+      },
+      "steps": 280,
+      "totalConsumption": 271,
+      "coloredConsumption": 266,
+      "toolConsumption": 5,
+      "collectibles": 256,
+      "cargoTotal": 256,
+      "firstClear": {
+        "cell": {
+          "x": 0,
+          "y": 0
+        },
+        "selection": 2
+      },
+      "witness": [
+        0,
+        2,
+        3,
+        1,
+        0,
+        3,
+        1,
+        2,
+        2,
+        2
+      ],
+      "finalStatus": "won",
+      "keyPolicy": "actual shared reveal and flight acknowledgement, headless serialized adapter (not wall-clock animation proof)",
+      "contractVersion": 3,
+      "queueContractVersion": 1,
+      "silkContractVersion": 1,
+      "engine": "src/game/engine.js",
+      "uiReady": true
+    },
+    "baseLevelId": "fruit-watermelon",
+    "experimental": true,
+    "sourceMeta": {
+      "season": {
+        "id": "fruit-season",
+        "name": "果实之季",
+        "order": 2
+      },
+      "theme": {
+        "id": "fruit-study",
+        "name": "果园拾光",
+        "order": 1
+      },
+      "night": 2,
+      "paintingName": "西瓜"
+    },
+    "consumptionOverlay": {
+      "version": 1,
+      "cells": [
+        {
+          "x": 0,
+          "y": 7,
+          "kind": "ice",
+          "hits": 2
+        },
+        {
+          "x": 11,
+          "y": 2,
+          "kind": "ice",
+          "hits": 2
+        },
+        {
+          "x": 13,
+          "y": 2,
+          "kind": "ice",
+          "hits": 2
+        },
+        {
+          "x": 12,
+          "y": 12,
+          "kind": "ice",
+          "hits": 2
+        },
+        {
+          "x": 8,
+          "y": 4,
+          "kind": "ice",
+          "hits": 2
+        },
+        {
+          "x": 10,
+          "y": 13,
+          "kind": "ice",
+          "hits": 2
+        },
+        {
+          "x": 2,
+          "y": 9,
+          "kind": "ice",
+          "hits": 2
+        },
+        {
+          "x": 10,
+          "y": 5,
+          "kind": "ice",
+          "hits": 2
+        },
+        {
+          "x": 7,
+          "y": 1,
+          "kind": "ice",
+          "hits": 2
+        },
+        {
+          "x": 11,
+          "y": 5,
+          "kind": "ice",
+          "hits": 2
+        }
+      ],
+      "blocks": []
+    },
+    "queueMechanics": {
+      "version": 1,
+      "recipe": {
+        "id": "silk-ice",
+        "keys": 0,
+        "pairs": 0
+      },
+      "keys": [],
+      "locks": []
+    },
+    "silkMechanics": {
+      "version": 1,
+      "webs": [
+        {
+          "id": "web-1",
+          "toolType": "silk-cutter",
+          "cells": [
+            {
+              "x": 14,
+              "y": 1
+            },
+            {
+              "x": 13,
+              "y": 1
+            },
+            {
+              "x": 15,
+              "y": 1
+            }
+          ],
+          "remaining": 2
+        },
+        {
+          "id": "web-2",
+          "toolType": "silk-cutter",
+          "cells": [
+            {
+              "x": 13,
+              "y": 0
+            },
+            {
+              "x": 12,
+              "y": 0
+            },
+            {
+              "x": 14,
+              "y": 0
+            }
+          ],
+          "remaining": 3
+        }
+      ],
+      "recipe": {
+        "id": "silk-ice",
+        "pairs": 0,
+        "keys": 0,
+        "overlay": "ice"
+      }
+    }
+  },
+  "scene": null
+}

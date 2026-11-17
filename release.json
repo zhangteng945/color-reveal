@@ -1,15 +1,18 @@
 {
   "role": "isolated complete readonly export; NOT public deployment/authority merge",
   "exportVersion": 1,
-  "requestId": "5891e525-a172-44c4-89f4-cc4ebfa6eccd",
-  "createdAt": "2026-11-17T20:48:55.376Z",
-  "catalog": {
-    "schemaVersion": 1,
+  "requestId": "visual-lazy-complete-4252-v3",
+  "createdAt": "2026-11-17T23:23:22.652Z",
+  "sourceCatalogSha256": "2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78",
+  "playerLibrary": {
+    "schemaVersion": 2,
+    "mode": "level-index-v1",
     "revision": 18,
-    "sha256": "2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78",
-    "catalog": "/library/releases/2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78.json"
+    "sha256": "2c56c614145c5f6c17605614edc9e1cd27c19eec2974dee3c616fe03b77a93c7",
+    "index": "/library/indexes/2c56c614145c5f6c17605614edc9e1cd27c19eec2974dee3c616fe03b77a93c7.json",
+    "sourceCatalogSha256": "2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78"
   },
-  "runtimeSha": "d3e5b9dee7faa981353ed19840ed47ad4b33946a5c520cd7a2751dc1c83d4016",
+  "runtimeSha": "58435dcd471808fbdc81f0390971f0ded4e67d54a2f45284e8c9c18101b7b04b",
   "treeFormula": "CR-TREE-SHA256-V1",
   "contracts": {
     "catalog": 4,
