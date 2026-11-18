@@ -19,8 +19,16 @@
     { id: 'clear-12', name: '清除', glyph: '✕', unlockLevel: 8, desc: '清除至多 12 格' },
     { id: 'absorb', name: '吸收', glyph: '◌', unlockLevel: 10, desc: '吸收同色星' },
   ];
-  // 已验证列排列的变体：每次进入/重来随机抽一个；一局内不再变。
-  const VARIANT_PERMS = [[0,1,2,3],[0,2,1,3],[1,0,2,3],[1,2,3,0],[2,1,0,3],[2,3,0,1],[3,0,1,2],[3,2,1,0]];
+  // 已验证列排列的变体：四列的全部 24 种排列，每次进入/重来随机抽一个；一局内不再变。
+  const VARIANT_PERMS = (() => {
+    const out = [];
+    const walk = (rest, acc) => {
+      if (!rest.length) { out.push(acc); return; }
+      rest.forEach((v, i) => walk(rest.slice(0, i).concat(rest.slice(i + 1)), acc.concat(v)));
+    };
+    walk([0, 1, 2, 3], []);
+    return out;
+  })();
   function makeVariants(level, proof) {
     const base = level.columns || [];
     return VARIANT_PERMS.map(perm => ({
@@ -129,6 +137,7 @@
     level.season = m.season; level.theme = m.theme; level.night = m.night;
     level.steps = (PROOFS[level.id] || []).length || m.steps;
     level.chapter = level.chapter || m.night;
+    level.no = i + 1; // 内置关的进度号；自定关固定为 0，不绕过星具解锁
   });
   const progress = loadProgress();
   const tipSeen = progress.tips || {};
@@ -154,6 +163,7 @@
       level.theme = level.theme || '上传的画';
       level.night = level.night || '自定晚';
       level.chapter = level.chapter || level.night;
+      level.no = 0;
       level.steps = level.actualMoves || (level.proof ? level.proof.length : 0);
       level.cells = level.cells.map(row => row.slice());
       LEVELS.push(level);
@@ -194,12 +204,13 @@
     return PALETTE[color] || { name: color, fill: '#7a6a9a', glow: '#cdbce8' };
   }
   function jarStyle(color) {
-    const p = colorMeta(color);
-    const rgb = ART.hexToRgb(p.fill);
+    // 罐子用与星点同一套高饱和色，玩家看罐色就能对上夜空里的星色。
+    const sc = ART.starColor(color);
+    const rgb = ART.hexToRgb(sc.ray);
     const lum = (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
-    const ink = lum > .52 ? '#241a30' : '#fff7e5';
-    const shadow = lum > .52 ? '0 1px 0 rgba(255,255,255,.22), 0 0 6px rgba(255,255,255,.12)' : '0 1px 2px rgba(9,6,18,.85), 0 0 9px rgba(9,6,18,.5)';
-    return `--jar-fill:${p.fill};--jar-glow:${p.glow};--jar-soft:${ART.rgba(p.glow, .18)};--jar-ink:${ink};--jar-ink-shadow:${shadow}`;
+    const ink = lum > .58 ? '#241a30' : '#fff7e5';
+    const shadow = lum > .58 ? '0 1px 0 rgba(255,255,255,.22), 0 0 6px rgba(255,255,255,.12)' : '0 1px 2px rgba(9,6,18,.85), 0 0 9px rgba(9,6,18,.5)';
+    return `--jar-fill:${sc.ray};--jar-glow:${sc.core};--jar-soft:${ART.rgba(sc.ray, .18)};--jar-ink:${ink};--jar-ink-shadow:${shadow}`;
   }
   function jarMarkup(color, count, cls) {
     return `<span class="jar ${cls || ''}" style="${jarStyle(color)}" role="img" aria-label="${colorMeta(color).name}星罐，${count}颗星">
@@ -214,6 +225,7 @@
     $$('[data-cottage]').forEach((node, i) => {
       node.innerHTML = ART.cottageSVG('c' + i);
     });
+    $$('[data-fairy]').forEach(node => { node.innerHTML = ART.fairySVG(); });
   }
 
   /* ---------- 首页 ---------- */
@@ -430,7 +442,7 @@
 
   function renderAll() { renderQueue(); renderSlots(); updateHud(true); }
 
-  function propUnlocked(p) { return (state.levelIndex + 1) >= p.unlockLevel; }
+  function propUnlocked(p) { return !!(state.game && state.game.level && (state.game.level.no || 0) >= p.unlockLevel); }
 
   function buildProps() {
     if (!el.propTray) return;
@@ -838,9 +850,10 @@
     const padB = parseFloat(style.paddingBottom) || 0;
     const mainGap = parseFloat(getComputedStyle($('.play-main')).rowGap) || 6;
     const avail = el.play.clientHeight - padT - padB - topH - terraceH - queueH - propH - mainGap * 3 - 8;
-    const maxBoard = Math.min(320, contentW - 14);
-    let board = Math.min(maxBoard, avail - 14);
-    board = clamp(board, 224, 320);
+    // 不再有 18px 金框，棋盘可以多占一点夜空；上限仍受可视高度约束。
+    const maxBoard = Math.min(336, contentW - 4);
+    let board = Math.min(maxBoard, avail);
+    board = clamp(board, 224, 336);
     el.play.style.setProperty('--board', Math.floor(board) + 'px');
     // 迫使画框按新尺寸排一次，再画
     void el.boardFrame.offsetWidth;
@@ -1132,7 +1145,7 @@
       ART.drawFairy(ctx, f.x, f.y, f.color, {
         time: now, phase: f.phase, angle: f.angle * .32,
         glow: f.status === 'back', carrying: f.status === 'back',
-        trail: f.trail, scale: .78,
+        trail: f.trail, scale: .92,
       });
       ctx.restore();
     }
