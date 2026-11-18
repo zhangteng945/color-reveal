@@ -448,10 +448,20 @@ button:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3px; }
 .jar.is-top .jar-count { color: var(--jar-ink, #fff7e5); letter-spacing: .015em; }
 .jar.is-waiting::before { opacity: .46; }
 .jar.is-waiting { filter: saturate(.86) brightness(.94); }
-.jar.slot-jar { animation: slotJarIn .26s cubic-bezier(.2,.85,.3,1.1) both; }
-@keyframes slotJarIn { from { transform: translateY(-7px) scale(.92); opacity: .4; } to { transform: none; opacity: 1; } }
-.jar.leaving { animation: jarLeave .24s ease both; }
-@keyframes jarLeave { to { transform: translateY(-8px) scale(.9); opacity: 0; } }
+/* 星罐进位不做上下跳动；跳动只属于真正发出一只精灵的那一次 dispatch。 */
+.jar.is-dispatching { animation: slotJarDispatch .19s cubic-bezier(.2,.85,.3,1) both; }
+@keyframes slotJarDispatch {
+  0% { transform: translateY(0) scale(1); }
+  36% { transform: translateY(-5px) scale(1.045); }
+  68% { transform: translateY(1.5px) scale(.995); }
+  100% { transform: translateY(0) scale(1); }
+}
+.jar.leaving { animation: jarLeave .22s ease both; }
+@keyframes jarLeave { from { opacity: 1; } to { opacity: 0; } }
+/* 最后一只出发时既跳一次，又在跳完前淡出；两段动画不叠加位移。 */
+.jar.leaving.is-dispatching {
+  animation: slotJarDispatch .19s cubic-bezier(.2,.85,.3,1) both, jarLeave .18s ease .08s both;
+}
 
 .queue-card {
   position: relative; flex: 0 0 auto; width: min(360px, 100%);

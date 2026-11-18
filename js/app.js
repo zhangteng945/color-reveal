@@ -100,6 +100,9 @@
     slotEls: [],
     arriving: {},
     leaving: {},
+    // 只有真正 dispatch 的那一格才消费一次跳动标记；等待、重绘、采集都不碰它。
+    slotBounce: null,
+    slotBounceId: 0,
     fairies: [],
     bursts: [],
     flashes: [],
@@ -362,6 +365,7 @@
     state.startedAt = nowMs();
     state.arriving = {};
     state.leaving = {};
+    state.slotBounce = null;
     state.fairies = [];
     state.bursts = [];
     state.flashes = [];
@@ -678,6 +682,66 @@
     }
   }
 
+  // 槽里的罐只原地更新数字/状态；不再每次 renderSlots 都重建节点。
+  // 旧实现每次重绘都会重新挂上 .slot-jar 的入场动画，于是任意槽出发、采集、
+  // 清理时所有罐都会重播一次“跳”，看起来像没出发也在跳。
+  function mountSlotJar(cell, jar, count, opts) {
+    opts = opts || {};
+    const same = cell._jarEl && cell.contains(cell._jarEl) &&
+      cell._jarUid === jar.uid && cell._jarColor === jar.color;
+    if (same) {
+      const countEl = cell._jarEl.querySelector('.jar-count');
+      if (countEl && countEl.textContent !== String(count)) countEl.textContent = String(count);
+      cell._jarEl.classList.toggle('is-waiting', !!opts.waiting);
+      cell._jarEl.classList.toggle('leaving', !!opts.leaving);
+      return cell._jarEl;
+    }
+    cell.innerHTML = jarMarkup(
+      jar.color,
+      count,
+      'slot-jar' + (opts.waiting ? ' is-waiting' : '') + (opts.leaving ? ' leaving' : '')
+    );
+    cell._jarEl = cell.querySelector('.jar');
+    cell._jarUid = jar.uid;
+    cell._jarColor = jar.color;
+    return cell._jarEl;
+  }
+
+  function clearSlotJar(cell) {
+    cell.innerHTML = '';
+    cell._jarEl = null;
+    cell._jarUid = null;
+    cell._jarColor = null;
+  }
+
+  // 只由一次真实 dispatch 调用。重播前先清掉同一节点上一次动画，避免多次跳动叠加。
+  function playSlotBounce(node, token) {
+    if (!node) return;
+    if (node._bounceCleanup) node.removeEventListener('animationend', node._bounceCleanup);
+    node.classList.remove('is-dispatching');
+    void node.offsetWidth;
+    node.classList.add('is-dispatching');
+    node.dataset.dispatchBounce = String(token);
+    const cleanup = e => {
+      if (e.animationName !== 'slotJarDispatch') return;
+      node.removeEventListener('animationend', cleanup);
+      if (node._bounceCleanup === cleanup) node._bounceCleanup = null;
+      // 正在腾槽的节点会在 300ms 内被清掉；保留组合动画类，避免切回单段 jarLeave
+      // 时把淡出从头重播一次。
+      if (!node.classList.contains('leaving')) node.classList.remove('is-dispatching');
+    };
+    node._bounceCleanup = cleanup;
+    node.addEventListener('animationend', cleanup);
+  }
+
+  function consumeSlotBounce(cell, i) {
+    const bounce = state.slotBounce;
+    if (!bounce || bounce.slotIndex !== i) return;
+    // 消费后立刻清空；同一 dispatch 之后的采集/清理重绘不会再次触发。
+    state.slotBounce = null;
+    if (cell._jarEl && cell._jarUid === bounce.jarUid) playSlotBounce(cell._jarEl, bounce.id);
+  }
+
   function renderSlots() {
     if (!state.game) return;
     const game = state.game;
@@ -692,14 +756,15 @@
       if (!jar) {
         if (leave && now - leave.at <= 280) {
           cell.classList.add('has-jar', 'is-leaving');
-          cell.innerHTML = jarMarkup(leave.jar.color, 0, 'slot-jar leaving');
+          mountSlotJar(cell, leave.jar, 0, { leaving: true });
           cell.setAttribute('aria-label', `出巢位 ${i + 1}，正在空出`);
         } else {
-          cell.innerHTML = '';
+          clearSlotJar(cell);
           const next = game.firstEmptySlot() === i;
           if (next) cell.classList.add('is-next');
           cell.setAttribute('aria-label', `出巢位 ${i + 1}，空`);
         }
+        consumeSlotBounce(cell, i);
         continue;
       }
       cell.classList.add('has-jar');
@@ -707,14 +772,16 @@
       if (age < JAR_ENTER_MS) {
         // 罐子还在进位：先给一个落位光晕，精灵不出场
         cell.classList.add('is-arriving');
-        cell.innerHTML = '';
+        clearSlotJar(cell);
         cell.setAttribute('aria-label', `出巢位 ${i + 1}，星罐正在落位`);
+        consumeSlotBounce(cell, i);
         continue;
       }
       const ready = age >= JAR_ENTER_MS;
       const waiting = ready && jar.remaining > 0 && game.reachableCells(jar.color).length === 0;
-      cell.innerHTML = jarMarkup(jar.color, jar.remaining, 'slot-jar' + (waiting ? ' is-waiting' : ''));
+      mountSlotJar(cell, jar, jar.remaining, { waiting });
       cell.setAttribute('aria-label', `出巢位 ${i + 1}，${colorMeta(jar.color).name}星罐，还剩 ${jar.remaining} 只精灵${waiting ? '，正在等星露出来' : ''}`);
+      consumeSlotBounce(cell, i);
     }
   }
 
@@ -1410,17 +1477,26 @@
       return { x: (r.left + r.width / 2 - b.rect.left) / b.cell, y: (r.top - b.rect.top) / b.cell - .4 };
     });
     if (now - state.lastDispatch >= DISPATCH_MS / state.timeScale) {
+      // dispatchNext 在最后一只出发时会立刻把 slot.jar 置空；先留一份引用，
+      // 让 UI 仍能在这一格上播完这一次跳动，再按既有规则腾槽。
+      const departingJars = state.game.slots.map(s => s.jar);
       const result = state.game.dispatchNext(origins, now, ready);
       if (result) {
+        const departing = departingJars[result.slotIndex] || null;
         state.lastDispatch = now;
         spawnFairy(result, now);
-        renderSlots();
-        updateHud(true);
         if (result.slotCleared) {
           delete state.waitingSince[result.slotIndex];
-          state.leaving[result.slotIndex] = { at: now, jar: result.jar || { color: result.claim.color } };
+          state.leaving[result.slotIndex] = { at: now, jar: departing || { uid: result.claim.jarUid, color: result.claim.color } };
           later(() => { delete state.leaving[result.slotIndex]; renderSlots(); }, 300);
         }
+        state.slotBounce = {
+          slotIndex: result.slotIndex,
+          jarUid: departing ? departing.uid : result.claim.jarUid,
+          id: ++state.slotBounceId,
+        };
+        renderSlots();
+        updateHud(true);
         if (state.game.status === 'lost') scheduleLoss(now);
       }
     }
