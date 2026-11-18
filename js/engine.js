@@ -58,7 +58,7 @@
     get slotsFull() { return this.slots.every(s => s.jar !== null); }
     get hasEmptySlot() { return this.slots.some(s => s.jar === null); }
     get queueEmpty() { return this.columns.every(c => c.length === 0); }
-    get speedFactor() { return this.queueEmptied ? 1.7 : 1.0; }
+    get speedFactor() { return this.queueEmptied ? 2.4 : 1.0; }
 
     firstEmptySlot() {
       for (let i = 0; i < this.slots.length; i++) if (!this.slots[i].jar) return i;
@@ -242,6 +242,71 @@
       return { ok: true, color, x, y, index, claim, cleared: this.status === 'cleared', lost: this.status === 'lost' };
     }
 
+    // 第 8 关“清除至多 12 块”：点掉一颗星，同时从该色队尾星罐扣掉一格。
+    // 只允许清除当前没有精灵在途、也没有占槽的颜色，避免与飞行中的认领打架。
+    clearStarAt(index) {
+      if (this.status !== 'playing') return { ok: false, reason: 'ended' };
+      const x = index % this.N, y = Math.floor(index / this.N);
+      if (y < 0 || y >= this.N || x < 0 || x >= this.N) return { ok: false, reason: 'range' };
+      const color = this.board[y][x];
+      if (!color) return { ok: false, reason: 'empty' };
+      if (this.claimed.has(index)) return { ok: false, reason: 'claimed' };
+      for (const s of this.slots) if (s.jar && s.jar.color === color) return { ok: false, reason: 'in-slot' };
+      for (const c of this.claimed.values()) if (c.color === color) return { ok: false, reason: 'in-flight' };
+      // 从最深的一罐扣起，尽量不改变队首的可玩性
+      let found = null;
+      for (let ci = this.columns.length - 1; ci >= 0 && !found; ci--) {
+        const col = this.columns[ci];
+        for (let ji = col.length - 1; ji >= 0; ji--) {
+          if (col[ji].color === color && col[ji].remaining > 0) { found = { ci, ji, jar: col[ji] }; break; }
+        }
+      }
+      if (!found) return { ok: false, reason: 'no-jar' };
+      found.jar.remaining--;
+      if (found.jar.remaining <= 0) this.columns[found.ci].splice(found.ji, 1);
+      this.board[y][x] = null;
+      this.collected++;
+      this.moves++;
+      if (this.queueEmpty) this.queueEmptied = true;
+      this.events.push({ type: 'clear', index, color, col: found.ci });
+      this.checkStatus();
+      return { ok: true, color, x, y, index, col: found.ci, left: this.starsLeft };
+    }
+
+    // 第 10 关“吸收”：吸收一种当前不在槽/不在途的颜色，画上该色全收、队列里该色罐全移走。
+    absorbCandidates() {
+      const map = {};
+      for (let y = 0; y < this.N; y++) for (let x = 0; x < this.N; x++) {
+        const c = this.board[y][x];
+        if (c) map[c] = (map[c] || 0) + 1;
+      }
+      for (const s of this.slots) if (s.jar) delete map[s.jar.color];
+      for (const c of this.claimed.values()) delete map[c.color];
+      for (const col of this.columns) for (const j of col) if (!(j.color in map)) delete map[j.color];
+      return Object.keys(map).sort((a, b) => map[b] - map[a]).map(color => ({ color, count: map[color] }));
+    }
+
+    absorbColor(color) {
+      if (this.status !== 'playing') return { ok: false, reason: 'ended' };
+      if (!color) return { ok: false, reason: 'no-color' };
+      for (const s of this.slots) if (s.jar && s.jar.color === color) return { ok: false, reason: 'in-slot' };
+      for (const c of this.claimed.values()) if (c.color === color) return { ok: false, reason: 'in-flight' };
+      let removed = 0;
+      for (let y = 0; y < this.N; y++) for (let x = 0; x < this.N; x++) {
+        if (this.board[y][x] === color) { this.board[y][x] = null; removed++; }
+      }
+      if (!removed) return { ok: false, reason: 'empty' };
+      for (let ci = 0; ci < this.columns.length; ci++) {
+        this.columns[ci] = this.columns[ci].filter(j => j.color !== color);
+      }
+      this.collected += removed;
+      this.moves++;
+      if (this.queueEmpty) this.queueEmptied = true;
+      this.events.push({ type: 'absorb', color, removed });
+      this.checkStatus();
+      return { ok: true, color, removed, left: this.starsLeft, queueEmptied: this.queueEmptied };
+    }
+
     checkStatus() {
       if (this.status !== 'playing') return this.status;
       if (this.collected >= this.total) {
@@ -310,10 +375,12 @@
 
   function validateLevel(level, opts) {
     const errors = [];
-    if (!level.cells || level.cells.length !== 16) errors.push('棋盘必须是 16×16');
+    if (!level.cells || !level.cells.length) { errors.push('棋盘不能为空'); return errors; }
+    const N = level.cells.length;
+    if (N < 4 || N > 28) errors.push('棋盘边长需在 4–28');
     const counts = {};
     for (const row of level.cells) {
-      if (row.length !== 16) errors.push('棋盘行宽必须是 16');
+      if (row.length !== N) errors.push('棋盘必须是 N×N 方阵');
       for (const c of row) counts[c] = (counts[c] || 0) + 1;
     }
     const jars = {};

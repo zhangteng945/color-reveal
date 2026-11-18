@@ -10,8 +10,8 @@
   const STORE_KEY = 'shiguang-progress-v1';
   const CUSTOM_STORE_KEY = 'shiguang-custom-levels-v1';
   const JAR_ENTER_MS = 270;
-  const DISPATCH_MS = 145;
-  const BASE_SPEED = 168;
+  const DISPATCH_MS = 165;
+  const BASE_SPEED = 158;
 
   const PROPS = [
     { id: 'borrow-slot', name: '借槽', glyph: '＋', unlockLevel: 3, desc: '临时多一个出巢位' },
@@ -30,12 +30,23 @@
     return out;
   })();
   function makeVariants(level, proof) {
+    if (Array.isArray(level.variants) && level.variants.length) {
+      return level.variants.map((v, i) => ({
+        columns: v.columns.map(col => col.map(j => ({ color: j.color, count: j.count }))),
+        proof: v.proof.slice(),
+        actualMoves: v.actualMoves || v.proof.length,
+        temptation: !!v.temptation,
+        index: i,
+      }));
+    }
     const base = level.columns || [];
     return VARIANT_PERMS.map(perm => ({
       columns: perm.map(ci => (base[ci] || []).map(j => ({ color: j.color, count: j.count }))),
       proof: (proof || []).map(ci => perm.indexOf(ci)),
+      actualMoves: (proof || []).length,
     }));
   }
+
   const $ = (sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -123,20 +134,20 @@
     currentVariant: 0,
     fixedVariant: null,
     levelVariants: [],
+    flightSpeed: BASE_SPEED,
+    endgameBoostAt: 0,
+    endgameBoosted: false,
+    clearLeft: 0,
+    showPaths: false,
   };
 
-  const HOME_META = [
-    { season: '长夜季', theme: '萤溪与玻璃屋', night: '第一晚', steps: 9 },
-    { season: '长夜季', theme: '月下的玻璃花房', night: '第二晚', steps: 15 },
-    { season: '长夜季', theme: '纸船与星港', night: '第三晚', steps: 13 },
-    { season: '长夜季', theme: '雾岭与灯屋', night: '第四晚', steps: 14 },
-    { season: '长夜季', theme: '破晓与铃兰', night: '第五晚', steps: 15 },
-  ];
+  // 首页信息全部来自关卡数据：季、主题、第几晚、画面名、机制与难度。
   LEVELS.forEach((level, i) => {
-    const m = HOME_META[i] || { season: '长夜季', theme: '未命名的画', night: `第${i + 1}晚` };
-    level.season = m.season; level.theme = m.theme; level.night = m.night;
-    level.steps = (PROOFS[level.id] || []).length || m.steps;
-    level.chapter = level.chapter || m.night;
+    level.season = level.season || '长夜季';
+    level.theme = level.theme || '未命名的画';
+    level.night = level.night || `第 ${i + 1} 晚`;
+    level.steps = level.actualMoves || (PROOFS[level.id] || []).length || 0;
+    level.chapter = level.chapter || level.night;
     level.no = i + 1; // 内置关的进度号；自定关固定为 0，不绕过星具解锁
   });
   const progress = loadProgress();
@@ -246,6 +257,7 @@
       const info = document.createElement('span');
       info.className = 'level-info';
       const stepText = level.steps ? `约 ${level.steps} 步 · ` : '';
+      const densityText = level.density ? `${level.density}×${level.density} · ` : '';
       info.innerHTML = `<span class="level-kicker"><i class="dot"></i>${escapeHtml(level.season)} · ${escapeHtml(level.night)} · ${escapeHtml(level.difficulty)}</span><span class="level-name">${escapeHtml(level.name)}</span><span class="level-sub">${escapeHtml(level.theme)} · ${stepText}${escapeHtml(level.intro)}</span>`;
       const go = document.createElement('span');
       go.className = 'card-go';
@@ -263,28 +275,39 @@
       el.levelList.appendChild(card);
       drawThumb(canvas, level, !!done);
     });
-    const doneCount = LEVELS.filter(l => progress.completed[l.id]).length;
-    el.homeProgress.textContent = `${doneCount} / ${LEVELS.length}`;
+    const builtin = LEVELS.filter(l => l.no > 0);
+    const doneCount = builtin.filter(l => progress.completed[l.id]).length;
+    el.homeProgress.textContent = `${doneCount} / ${builtin.length}`;
   }
 
   function drawThumb(canvas, level, done) {
     const ctx = canvas.getContext('2d');
-    const N = level.cells.length, cell = canvas.width / N;
-    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-      const p = colorMeta(level.cells[y][x]);
-      ctx.fillStyle = p.fill;
-      ctx.fillRect(x * cell, y * cell, cell + .2, cell + .2);
-      ctx.fillStyle = 'rgba(255,248,228,.09)';
-      ctx.fillRect(x * cell, y * cell, cell + .2, Math.max(.6, cell * .14));
-    }
-    if (!done) {
-      ctx.fillStyle = 'rgba(13,11,27,.48)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const N = level.cells.length;
+    const img = ART.cartoonImage(level);
+    if (img) {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      if (!done) {
+        ctx.fillStyle = 'rgba(13,11,27,.46)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // 未通关时只透出一点星点，不提前展示完整画。
+        const cell = canvas.width / N;
+        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+          const p = colorMeta(level.cells[y][x]);
+          ctx.fillStyle = ART.rgba(ART.starColor(level.cells[y][x]).ray, .55);
+          const r = Math.max(.5, cell * .11);
+          ctx.beginPath(); ctx.arc((x + .5) * cell, (y + .5) * cell, r, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    } else {
+      const cell = canvas.width / N;
       for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
         const p = colorMeta(level.cells[y][x]);
-        ctx.fillStyle = ART.rgba(p.glow, .42 + ((x * 7 + y * 11) % 5) * .05);
-        const r = Math.max(.6, cell * .09);
-        ctx.fillRect(x * cell + cell / 2 - r, y * cell + cell / 2 - r, r * 2, r * 2);
+        ctx.fillStyle = p.fill;
+        ctx.fillRect(x * cell, y * cell, cell + .2, cell + .2);
+      }
+      if (!done) {
+        ctx.fillStyle = 'rgba(13,11,27,.48)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
     }
     ctx.strokeStyle = 'rgba(255,246,219,.1)';
@@ -313,7 +336,12 @@
     state.levelIndex = index;
     state.loadingLevel = null;
     const baseLevel = LEVELS[index];
-    const variants = makeVariants(baseLevel, PROOFS[baseLevel.id] || []);
+    let variants = makeVariants(baseLevel, PROOFS[baseLevel.id] || []);
+    // 第 3 关必须能遇到“够不着的队首”；只在带诱惑的已验证变体里抽。
+    if (baseLevel.id === 'paper-harbor') {
+      const tempted = variants.filter(v => v.temptation);
+      if (tempted.length) variants = tempted;
+    }
     state.levelVariants = variants;
     const forced = opts.variant != null ? opts.variant : state.fixedVariant;
     const variantIndex = forced != null
@@ -327,6 +355,10 @@
       { slotCount: 5, visibleRows: 3 }
     );
     state.timeScale = 1;
+    state.flightSpeed = BASE_SPEED;
+    state.endgameBoostAt = 0;
+    state.endgameBoosted = false;
+    state.clearLeft = 0;
     state.startedAt = nowMs();
     state.arriving = {};
     state.leaving = {};
@@ -370,6 +402,7 @@
     state.screen = 'play';
     buildSlots();
     buildProps();
+    ART.preloadArt([baseLevel]).then(() => { if (state.screen === 'play') drawBoardFrame(); });
     const level = LEVELS[index];
     el.levelChapter.textContent = `${level.season || level.chapter} · ${level.night || level.chapter}`;
     el.levelName.textContent = level.name;
@@ -489,14 +522,75 @@
       showToast(state.propMode ? '点一罐后排的星罐。' : '已收起选后排。');
       return;
     }
-    // 第 8/10 关才解锁的星具：本轮没有对应关卡，保留锁与关次说明。
-    showToast(`${p.name}会在第 ${p.unlockLevel} 关解锁。`);
+    if (id === 'clear-12') {
+      if (state.propMode === 'clear-12') { clearPropMode(); return; }
+      state.propMode = 'clear-12';
+      state.clearLeft = 12;
+      state.propsUsed[id] = true;
+      buildProps();
+      renderQueue();
+      showToast('点星盘上的星，最多清除 12 颗。');
+      return;
+    }
+    if (id === 'absorb') {
+      const cands = state.game.absorbCandidates();
+      if (!cands.length) { showToast('现在没有可吸收的颜色。'); return; }
+      const pick = cands[0];
+      const r = state.game.absorbColor(pick.color);
+      if (!r.ok) { showToast('这个颜色正在槽里，换一个时机。'); return; }
+      state.propsUsed[id] = true;
+      // 吸收只允许没有在途精灵的颜色；这里再兜底清掉同色轨迹。
+      state.fairies = state.fairies.filter(f => f.color !== pick.color);
+      state.flashes = state.flashes.filter(f => f.color !== pick.color);
+      buildProps();
+      renderQueue();
+      renderSlots();
+      updateHud(true);
+      drawBoardFrame();
+      showToast(`吸收了 ${r.removed} 颗${colorMeta(pick.color).name}星。`);
+      if (state.game.status === 'cleared') {
+        if (!state.clearedAt) state.clearedAt = nowMs();
+      }
+      return;
+    }
   }
 
   function clearPropMode() {
     state.propMode = null;
+    state.clearLeft = 0;
     if (el.queueGrid) el.queueGrid.querySelectorAll('.is-back-target').forEach(b => b.classList.remove('is-back-target'));
     buildProps();
+    renderQueue();
+  }
+
+  function onBoardClick(e) {
+    if (!state.game || state.screen !== 'play' || state.game.status !== 'playing') return;
+    if (state.propMode !== 'clear-12') return;
+    const r = el.boardCanvas.getBoundingClientRect();
+    const N = state.game.N;
+    const x = Math.floor((e.clientX - r.left) / (r.width / N));
+    const y = Math.floor((e.clientY - r.top) / (r.height / N));
+    if (x < 0 || y < 0 || x >= N || y >= N) return;
+    const index = y * N + x;
+    const res = state.game.clearStarAt(index);
+    if (!res.ok) {
+      if (res.reason === 'in-slot' || res.reason === 'in-flight') showToast('这个颜色正在路上，换一颗。');
+      else if (res.reason === 'empty') showToast('这里已经是夜空。');
+      else showToast('这颗暂时清不了。');
+      return;
+    }
+    state.clearLeft--;
+    state.flashes.push({ x: res.x, y: res.y, color: res.color, at: nowMs() });
+    state.bursts.push({ x: e.clientX, y: e.clientY, color: res.color, at: nowMs(), seed: 1.7 });
+    updateHud(true);
+    renderQueue();
+    renderSlots();
+    drawBoardFrame();
+    if (state.clearLeft <= 0 || state.game.starsLeft <= 0) clearPropMode();
+    else showToast(`还能清除 ${state.clearLeft} 颗。`, 1200);
+    if (state.game.status === 'cleared') {
+      if (!state.clearedAt) state.clearedAt = nowMs();
+    } else if (state.game.status === 'lost') scheduleLoss(nowMs());
   }
 
   function startHold(color, btn) {
@@ -685,15 +779,7 @@
       maybeWaitingTip(res.slotIndex, res.jar);
       if (state.game && state.game.status === 'lost') scheduleLoss(nowMs());
     }, JAR_ENTER_MS + 20);
-    if (res.queueEmptied) {
-      el.queueCard.classList.add('is-final');
-      later(() => {
-        if (state.game && state.game.status === 'playing') {
-          showToast('星罐都出发了，收尾会快一些。', 2400);
-          markTip('speed');
-        }
-      }, 850);
-    }
+    if (res.queueEmptied) el.queueCard.classList.add('is-final');
     const otherReachable = otherColumnsReachable(col);
     const mineReachable = state.game.reachableCells(res.jar.color).length > 0;
     if (!mineReachable && otherReachable && state.levelIndex >= 1 && !tipSeen['skip-temptation']) {
@@ -936,110 +1022,200 @@
     return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u, angle: Math.atan2(b.y - a.y, b.x - a.x) };
   }
 
-  function corridor(targetIndex) {
-    const g = state.game, N = g.N;
+  function cellAtBoardPoint(px, py, b) {
+    const x = Math.floor((px - b.rect.left) / b.cell);
+    const y = Math.floor((py - b.rect.top) / b.cell);
+    if (x < 0 || y < 0 || x >= b.N || y >= b.N) return null;
+    return { x, y, index: y * b.N + x };
+  }
+
+  // 从目标格出发，只穿过空格，走到画边；返回 target -> gate 的空位走廊。
+  function corridor(targetIndex, pref) {
+    const g = state.game, b = boardGeom(), N = g.N;
     const tx = targetIndex % N, ty = Math.floor(targetIndex / N);
     const key = (x, y) => y * N + x;
     const q = [[tx, ty]];
     const seen = new Set([key(tx, ty)]);
     const parent = new Map();
-    let edge = null;
+    const gates = [];
     while (q.length) {
       const [x, y] = q.shift();
-      if ((x === 0 || y === 0 || x === N - 1 || y === N - 1) && !(x === tx && y === ty)) { edge = [x, y]; break; }
-      if ((x === 0 || y === 0 || x === N - 1 || y === N - 1) && (x === tx && y === ty)) { edge = [x, y]; break; }
+      const isEdge = (x === 0 || y === 0 || x === N - 1 || y === N - 1);
+      if (isEdge && !(x === tx && y === ty)) gates.push([x, y]);
       for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
         const nx = x + dx, ny = y + dy;
         if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
         const k = key(nx, ny);
         if (seen.has(k)) continue;
+        // 目标格本身可以进；其余必须已经是夜空。
         if (g.board[ny][nx] !== null) continue;
         seen.add(k); parent.set(k, [x, y]); q.push([nx, ny]);
       }
     }
-    if (!edge) return [[tx, ty]];
+    if (!gates.length) gates.push([tx, ty]);
+    // 选一个门：距离近的优先，同时按 lane/精灵 id 给不同门一点扰动，回程不会只走一条轨道。
+    const lane = (pref && pref.lane) || 0;
+    const seed = (pref && pref.seed) || 0;
+    let gate = gates[0], best = Infinity;
+    for (const [gx, gy] of gates) {
+      const d = Math.abs(gx - tx) + Math.abs(gy - ty);
+      const h = hash01(gx * 73 + gy * 41 + lane * 13 + seed * 7);
+      const score = d * .55 + h * N * .55;
+      if (score < best) { best = score; gate = [gx, gy]; }
+    }
     const path = [];
-    let cur = edge;
+    let cur = gate;
+    const guard = new Set();
     while (cur) {
       path.push(cur);
       if (cur[0] === tx && cur[1] === ty) break;
-      cur = parent.get(key(cur[0], cur[1]));
+      const k = key(cur[0], cur[1]);
+      if (guard.has(k)) break;
+      guard.add(k);
+      cur = parent.get(k);
     }
-    path.reverse(); // edge -> target
-    return path;
+    path.reverse(); // target -> gate
+    return { cells: path, gate };
+  }
+
+  function hash01(n) {
+    let h = Math.imul(n | 0, 374761393) + 668265263;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+  }
+
+  function gateSide(gate, b) {
+    if (gate[0] === 0) return 'left';
+    if (gate[0] === b.N - 1) return 'right';
+    if (gate[1] === 0) return 'top';
+    return 'bottom';
+  }
+
+  function smoothPath(points, targetIndex) {
+    const pts = dedupe(points);
+    if (pts.length < 3) return buildPath(pts);
+    const b = boardGeom();
+    const samples = [];
+    const steps = 10;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+      for (let s = 0; s < steps; s++) {
+        const t = s / steps, t2 = t * t, t3 = t2 * t;
+        const x = .5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+        const y = .5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+        samples.push({ x, y });
+      }
+    }
+    samples.push(pts[pts.length - 1]);
+    for (const p of samples) {
+      const c = cellAtBoardPoint(p.x, p.y, b);
+      if (!c) continue;
+      if (state.game.board[c.y][c.x] !== null && c.index !== targetIndex) return buildPath(pts);
+    }
+    return buildPath(samples);
+  }
+
+  function outsidePoint(gate, b, margin) {
+    const side = gateSide(gate, b);
+    const off = Math.max(10, b.cell * margin);
+    if (side === 'left') return { x: b.rect.left - off, y: b.rect.top + (gate[1] + .5) * b.cell };
+    if (side === 'right') return { x: b.rect.right + off, y: b.rect.top + (gate[1] + .5) * b.cell };
+    if (side === 'top') return { x: b.rect.left + (gate[0] + .5) * b.cell, y: b.rect.top - off };
+    return { x: b.rect.left + (gate[0] + .5) * b.cell, y: b.rect.bottom + off };
+  }
+
+  function railFromStartToGate(start, gate, lane, b) {
+    const side = gateSide(gate, b);
+    const off = Math.max(8, b.cell * .62);
+    const laneOff = lane * b.cell * .22;
+    const xL = clamp(b.rect.left - off - laneOff, 6, b.rect.left - 4);
+    const xR = clamp(b.rect.right + off + laneOff, b.rect.right + 4, innerWidth - 6);
+    const yB = b.rect.bottom + off + Math.abs(lane) * b.cell * .10;
+    const yT = Math.max(58, b.rect.top - off - Math.abs(lane) * b.cell * .04);
+    const gx = b.rect.left + (gate[0] + .5) * b.cell;
+    const gy = b.rect.top + (gate[1] + .5) * b.cell;
+    const out = outsidePoint(gate, b, .62);
+    const goLeft = start.x < b.rect.left + b.rect.width / 2;
+    const pts = [
+      { x: start.x, y: start.y - 2 },
+      { x: start.x + lane * b.cell * .32, y: Math.max(start.y + b.cell * .5, yB + b.cell * .55) },
+    ];
+    if (side === 'bottom') {
+      pts.push({ x: (start.x + gx) / 2, y: yB });
+      pts.push({ x: gx, y: yB });
+      pts.push({ x: gx, y: b.rect.bottom + b.cell * .28 });
+    } else if (side === 'left') {
+      pts.push({ x: xL, y: yB });
+      pts.push({ x: xL, y: gy });
+      pts.push({ x: out.x, y: gy });
+    } else if (side === 'right') {
+      pts.push({ x: xR, y: yB });
+      pts.push({ x: xR, y: gy });
+      pts.push({ x: out.x, y: gy });
+    } else { // top，从左或右绕
+      const railX = goLeft ? xL : xR;
+      pts.push({ x: railX, y: yB });
+      pts.push({ x: railX, y: yT });
+      pts.push({ x: gx, y: yT });
+      pts.push({ x: gx, y: out.y });
+    }
+    const gp = { x: b.rect.left + (gate[0] + .5) * b.cell, y: b.rect.top + (gate[1] + .5) * b.cell };
+    pts.push({ x: gp.x, y: gp.y });
+    return pts;
+  }
+
+  function railFromGateToCottage(gate, lane, fairyId, b) {
+    const side = gateSide(gate, b);
+    const off = Math.max(8, b.cell * .62);
+    const laneOff = lane * b.cell * .22;
+    const xL = clamp(b.rect.left - off - laneOff, 6, b.rect.left - 4);
+    const xR = clamp(b.rect.right + off + laneOff, b.rect.right + 4, innerWidth - 6);
+    const yB = b.rect.bottom + off + Math.abs(lane) * b.cell * .10;
+    const gp = { x: b.rect.left + (gate[0] + .5) * b.cell, y: b.rect.top + (gate[1] + .5) * b.cell };
+    const out = outsidePoint(gate, b, .62);
+    const door = cottagePoint();
+    const swing = (hash01(fairyId * 31 + lane * 17) < .5 ? -1 : 1);
+    const pts = [gp, out];
+    if (side === 'top') {
+      const railX = (hash01(fairyId) < .5) ? xL : xR;
+      pts.push({ x: railX, y: out.y });
+      pts.push({ x: railX, y: yB });
+    } else if (side === 'left') {
+      pts.push({ x: xL, y: out.y });
+      pts.push({ x: xL, y: yB });
+    } else if (side === 'right') {
+      pts.push({ x: xR, y: out.y });
+      pts.push({ x: xR, y: yB });
+    } else {
+      pts.push({ x: out.x, y: yB });
+    }
+    pts.push({ x: door.x + swing * b.cell * 1.5, y: b.rect.bottom + b.cell * .8 });
+    pts.push({ x: door.x + swing * b.cell * .9, y: door.y + b.rect.height * .18 });
+    pts.push({ x: door.x + swing * b.cell * .35, y: door.y + 8 });
+    pts.push({ x: door.x, y: door.y });
+    return pts;
   }
 
   function buildFlightPath(slotIndex, targetIndex, lane) {
-    const g = state.game, N = g.N;
     const b = boardGeom();
-    const r = b.rect;
-    const tx = targetIndex % N, ty = Math.floor(targetIndex / N);
-    const target = cellPoint(tx, ty);
     const start = slotPoint(slotIndex);
-    const margin = Math.max(10, Math.min(16, b.cell * .7));
-    const laneOff = (lane || 0) * Math.max(2, b.cell * .16);
-    const corr = corridor(targetIndex);
-    const first = corr[0] || [tx, ty];
-    const entry = { x: r.left + (first[0] + .5) * b.cell, y: r.top + (first[1] + .5) * b.cell };
-    const side = first[0] === 0 ? 'left' : first[0] === N - 1 ? 'right' : first[1] === 0 ? 'top' : 'bottom';
-    const entryX = entry.x, entryY = entry.y;
-    const railLeft = r.left - margin - laneOff, railRight = r.right + margin + laneOff;
-    const railBottom = r.bottom + margin + laneOff, railTop = r.top - margin - laneOff;
-    const railSide = side === 'left' ? 'left' : side === 'right' ? 'right' : (entry.x < r.left + r.width / 2 ? 'left' : 'right');
-    const railX = railSide === 'left' ? railLeft : railRight;
-    const belowY = Math.max(railBottom, start.y - 10);
-    const pts = [
-      { x: start.x, y: start.y - 2 },
-      { x: start.x, y: belowY },
-      { x: railX, y: belowY },
-    ];
-    // 从出巢位下方绕到画框外沿，再沿外沿走到目标所在边
-    if (side === 'bottom') {
-      pts.push({ x: entryX, y: railBottom });
-      pts.push({ x: entryX, y: r.bottom + Math.max(4, margin * .35) });
-    } else if (side === 'left') {
-      if (railSide === 'left') {
-        pts.push({ x: railX, y: entryY });
-        pts.push({ x: r.left - Math.max(4, margin * .35), y: entryY });
-      } else {
-        pts.push({ x: railLeft, y: railBottom });
-        pts.push({ x: railLeft, y: entryY });
-        pts.push({ x: r.left - Math.max(4, margin * .35), y: entryY });
-      }
-    } else if (side === 'right') {
-      if (railSide === 'right') {
-        pts.push({ x: railX, y: entryY });
-        pts.push({ x: r.right + Math.max(4, margin * .35), y: entryY });
-      } else {
-        pts.push({ x: railRight, y: railBottom });
-        pts.push({ x: railRight, y: entryY });
-        pts.push({ x: r.right + Math.max(4, margin * .35), y: entryY });
-      }
-    } else { // top
-      if (railSide === 'left') {
-        pts.push({ x: railLeft, y: railTop });
-        pts.push({ x: entryX, y: railTop });
-        pts.push({ x: entryX, y: r.top - Math.max(4, margin * .35) });
-      } else {
-        pts.push({ x: railRight, y: railTop });
-        pts.push({ x: entryX, y: railTop });
-        pts.push({ x: entryX, y: r.top - Math.max(4, margin * .35) });
-      }
-    }
-    // 从目标边的外侧进入只有空格组成的走廊；这段直线不会越过未摘的星
-    for (const [cx, cy] of corr) pts.push(cellPoint(cx, cy));
-    return buildPath(pts);
+    const corr = corridor(targetIndex, { lane, seed: targetIndex });
+    const gate = corr.gate;
+    const pts = railFromStartToGate(start, gate, lane, b);
+    // 走廊 target -> gate，取反为 gate -> target；包含目标格本身。
+    const cells = corr.cells.slice().reverse();
+    for (const [x, y] of cells) pts.push(cellPoint(x, y));
+    return smoothPath(pts, targetIndex);
   }
 
   function buildReturnPath(fairy) {
-    const out = fairy.outPath.points.slice().reverse();
-    const door = cottagePoint();
-    const slot = slotPoint(fairy.slotIndex);
-    // 回到槽位上方后转向小屋门口；这一段在 UI 前景层，不穿过棋盘
-    out.push({ x: slot.x, y: slot.y - 8 });
-    out.push({ x: door.x, y: door.y + 26 });
-    out.push(door);
-    return buildPath(out);
+    const b = boardGeom();
+    const corr = corridor(fairy.claim.index, { lane: fairy.lane, seed: fairy.claim.id * 3 + 1 });
+    const gate = corr.gate;
+    const pts = [];
+    for (const [x, y] of corr.cells) pts.push(cellPoint(x, y));
+    pts.push(...railFromGateToCottage(gate, fairy.lane, fairy.claim.id, b));
+    return smoothPath(pts, fairy.claim.index);
   }
 
   /* ---------- 小精灵与主循环 ---------- */
@@ -1051,11 +1227,12 @@
       claim,
       slotIndex: result.slotIndex,
       color: claim.color,
-      phase: (claim.index * .37) % (Math.PI * 2),
+      // 每只扇翅相位不同，避免整队像贴纸一起平移。
+      phase: (claim.id * 1.73 + claim.index * .37) % (Math.PI * 2),
       lane,
       status: 'out',
       t: 0,
-      speed: BASE_SPEED,
+      speed: state.flightSpeed,
       outPath,
       path: outPath,
       trail: [],
@@ -1063,17 +1240,16 @@
       fade: 1,
       startAt: now,
       carrying: false,
+      pickUntil: 0,
     });
   }
 
   function updateFairies(now, dt) {
     if (!state.game) return;
-    const speed = BASE_SPEED * state.game.speedFactor;
     for (let i = state.fairies.length - 1; i >= 0; i--) {
       const f = state.fairies[i];
-      f.speed = speed;
       if (f.status === 'out') {
-        f.t += (f.speed * dt / 1000) / f.path.length;
+        f.t += (state.flightSpeed * dt / 1000) / f.path.length;
         if (f.t >= 1) {
           f.t = 1;
           const pos = pointAt(f.path, 1);
@@ -1083,27 +1259,34 @@
           state.bursts.push({ x: pos.x, y: pos.y, color: col, at: now, seed: f.phase });
           updateHud(true);
           renderSlots();
-          f.status = 'back';
+          f.status = 'pick';
+          f.pickUntil = now + (reducedMotion ? 40 : 130);
           f.carrying = true;
-          f.t = 0;
-          f.path = buildReturnPath(f);
-          f.trail = [];
           f.glow = true;
+          f.pickX = pos.x; f.pickY = pos.y; f.x = pos.x; f.y = pos.y;
+          f.returnPath = buildReturnPath(f);
+          f.trail = [];
           if (state.game.status === 'lost') scheduleLoss(now);
           if (state.game.status === 'cleared' && !state.clearedAt) {
             state.clearedAt = now;
             state.status = 'cleared';
           }
+          continue;
         }
+      } else if (f.status === 'pick') {
+        if (now >= f.pickUntil) {
+          f.status = 'back';
+          f.t = 0;
+          f.path = f.returnPath || buildReturnPath(f);
+        }
+        f.x = f.pickX; f.y = f.pickY;
+        continue;
       } else if (f.status === 'back') {
-        f.t += (f.speed * dt / 1000) / f.path.length;
-        if (f.t >= .86) f.fade = Math.max(0, 1 - (f.t - .86) / .14);
+        f.t += (state.flightSpeed * dt / 1000) / f.path.length;
         if (f.t >= 1) {
+          // 到家立刻消失，不在屋顶或门口停留。
+          state.bursts.push({ x: cottagePoint().x, y: cottagePoint().y, color: f.color, at: now, seed: f.phase });
           state.fairies.splice(i, 1);
-          if (state.game && state.game.status === 'cleared') {
-            // 所有精灵都回家后再原画显现
-            if (!state.clearedAt) state.clearedAt = now;
-          }
           continue;
         }
       }
@@ -1112,12 +1295,11 @@
       let da = targetAngle - f.angle;
       while (da > Math.PI) da -= Math.PI * 2;
       while (da < -Math.PI) da += Math.PI * 2;
-      f.angle += da * Math.min(1, dt / 110);
+      f.angle += da * Math.min(1, dt / 120);
       f.x = pos.x; f.y = pos.y;
       f.trail.push({ x: pos.x, y: pos.y });
       if (f.trail.length > 14) f.trail.shift();
     }
-    // 失败的兜底检查（例如最后一只出发后没有可摘）
     if (state.game.status === 'lost') scheduleLoss(now);
   }
 
@@ -1135,17 +1317,30 @@
     if (clearOnly || state.screen !== 'play' || !state.game) return;
     // 出巢位里只保留罐体与静态氤氲彩光，不画实体光球；小精灵只在出发后出现。
     // 飞行中的小精灵
+    const fairyScale = ART.fairyScaleForCell(boardGeom().cell);
     for (const f of state.fairies) {
       if (f.x == null) {
         const p = pointAt(f.path, 0);
         f.x = p.x; f.y = p.y;
       }
+      // 仅调试截图：画出实际飞行轨迹，验证绕开未摘星。
+      if (state.showPaths && f.path && f.path.points) {
+        ctx.save();
+        ctx.setLineDash([3, 4]);
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = f.status === 'back' ? 'rgba(255,226,160,.72)' : 'rgba(143,224,209,.65)';
+        ctx.beginPath();
+        f.path.points.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
       ctx.save();
       ctx.globalAlpha = f.fade == null ? 1 : f.fade;
       ART.drawFairy(ctx, f.x, f.y, f.color, {
-        time: now, phase: f.phase, angle: f.angle * .32,
-        glow: f.status === 'back', carrying: f.status === 'back',
-        trail: f.trail, scale: .92,
+        time: now, phase: f.phase, angle: clamp(f.angle * .26, -.38, .38),
+        glow: f.status === 'back' || f.status === 'pick', carrying: f.status === 'back' || f.status === 'pick',
+        trail: f.trail, scale: fairyScale,
       });
       ctx.restore();
     }
@@ -1182,6 +1377,23 @@
       return;
     }
     if (state.loadingLevel !== null || !el.enterVeil.hidden) return;
+    // 飞行速度只看盘面空了多少；出巢/数字节奏走独立的 DISPATCH_MS，不跟着加速。
+    const progress = 1 - state.game.starsLeft / Math.max(1, state.game.total);
+    let targetSpeed = BASE_SPEED * (1 + progress * .55);
+    if (state.game.queueEmptied) {
+      if (!state.endgameBoostAt) state.endgameBoostAt = now + JAR_ENTER_MS;
+      if (now >= state.endgameBoostAt) {
+        targetSpeed = BASE_SPEED * 2.9;
+        if (!state.endgameBoosted) {
+          state.endgameBoosted = true;
+          el.queueCard.classList.add('is-final');
+          showToast('星罐都出发了，收尾会快一些。', 2200);
+          markTip('speed');
+        }
+      }
+    }
+    const ease = state.endgameBoosted ? .30 : .055;
+    state.flightSpeed += (targetSpeed - state.flightSpeed) * ease;
     // 星罐进位结束后才允许精灵出现和出发
     const ready = state.game.slots.map(s => !!s.jar && now - s.enteredAt >= JAR_ENTER_MS);
     const origins = state.game.slots.map((s, i) => {
@@ -1290,7 +1502,7 @@
     state.overlayOpen = true;
     const level = LEVELS[state.levelIndex];
     const next = state.nextIndex;
-    el.modalEyebrow.textContent = next >= 0 ? '原画重现' : '五幅画都回来了';
+    el.modalEyebrow.textContent = next >= 0 ? '原画重现' : '二十幅画都回来了';
     el.modalTitle.textContent = level.name;
     el.modalText.textContent = next >= 0
       ? `全部星都回家了。《${level.name}》已经完整显现。`
@@ -1383,6 +1595,7 @@
   /* ---------- 事件 ---------- */
   function bind() {
     el.backHome.addEventListener('click', toHome);
+    el.boardCanvas.addEventListener('click', onBoardClick);
     el.restartBtn.addEventListener('click', () => {
       if (state.loadingLevel !== null) return;
       el.overlay.hidden = true;
@@ -1459,6 +1672,43 @@
         return { r: d[0], g: d[1], b: d[2], a: d[3], dpr, size: cv.width };
       },
       setTimeScale(v) { state.timeScale = Math.max(0.25, Math.min(20, +v || 1)); return state.timeScale; },
+      setShowPaths(v) { state.showPaths = !!v; drawFx(nowMs()); return state.showPaths; },
+      get flightSpeed() { return state.flightSpeed; },
+      fairyScale(cell) { return ART.fairyScaleForCell(cell == null ? boardGeom().cell : cell); },
+      auditFlight() {
+        if (!state.game) return { ok: false, reason: 'no-game' };
+        const b = boardGeom();
+        const bad = [];
+        for (const f of state.fairies) {
+          if (f.x == null) continue;
+          const c = cellAtBoardPoint(f.x, f.y, b);
+          if (c) {
+            const cell = state.game.board[c.y][c.x];
+            if (cell && c.index !== f.claim.index) bad.push({ id: f.claim.id, x: c.x, y: c.y, color: cell, status: f.status });
+          }
+          if (f.path && f.path.points) {
+            for (const p of f.path.points) {
+              const q = cellAtBoardPoint(p.x, p.y, b);
+              if (!q) continue;
+              const cell = state.game.board[q.y][q.x];
+              if (cell && q.index !== f.claim.index) bad.push({ id: f.claim.id, x: q.x, y: q.y, color: cell, status: 'path' });
+            }
+          }
+        }
+        return { ok: bad.length === 0, bad, fairies: state.fairies.length };
+      },
+      auditPath(slotIndex, targetIndex, lane) {
+        if (!state.game) return { ok: false };
+        const b = boardGeom();
+        const path = buildFlightPath(slotIndex == null ? 0 : slotIndex, targetIndex == null ? 0 : targetIndex, lane || 0);
+        const bad = [];
+        for (const p of path.points) {
+          const c = cellAtBoardPoint(p.x, p.y, b);
+          if (!c) continue;
+          if (state.game.board[c.y][c.x] !== null && c.index !== targetIndex) bad.push({ x: c.x, y: c.y, color: state.game.board[c.y][c.x] });
+        }
+        return { ok: bad.length === 0, bad: bad.slice(0, 8), points: path.points.length, list: path.points.map(p => ({ x: Math.round(p.x), y: Math.round(p.y) })) };
+      },
       proofs: PROOFS,
       forceLossForPreview() {
         if (!state.game) return;
@@ -1473,6 +1723,25 @@
         state.lostAt = nowMs() - 1000;
         renderSlots();
         showLoss();
+      },
+      sampleArt(x, y) {
+        const level = state.game.level;
+        const size = el.boardCanvas.clientWidth || 320;
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const art = ART.fullArtCanvas(level, size, dpr);
+        const ctx = art.getContext('2d');
+        const cell = art.width / state.game.N;
+        const d = ctx.getImageData(Math.floor((x + .5) * cell), Math.floor((y + .5) * cell), 1, 1).data;
+        return { r: d[0], g: d[1], b: d[2], a: d[3] };
+      },
+      setQueueEmptiedForPreview() {
+        if (!state.game) return;
+        state.game.columns.forEach(c => { c.length = 0; });
+        state.game.queueEmptied = true;
+        state.endgameBoostAt = nowMs() + JAR_ENTER_MS;
+        state.endgameBoosted = false;
+        renderQueue();
+        updateHud(true);
       },
       completeForPreview() {
         if (!state.game) return;
@@ -1506,6 +1775,7 @@
     const params = new URLSearchParams(location.search);
     const customPlay = loadCustomLevels(params);
     buildHome();
+    ART.preloadArt(LEVELS).then(() => { if (state.screen === 'home') buildHome(); });
     if (params.get('debug') === '1') exposeDebug();
     const qVariant = parseInt(params.get('variant'), 10);
     if (Number.isFinite(qVariant) && qVariant >= 0) state.fixedVariant = qVariant;

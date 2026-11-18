@@ -3,7 +3,7 @@
   'use strict';
 
   const PALETTE = global.SHIGUANG_PALETTE || {};
-  const ART_VERSION = 4;
+  const ART_VERSION = 6;
   // 可采星点专用高饱和色：原画仍用 PALETTE 的低饱和色，星点单独提纯，
   // 保证同一夜里每种星光的色相能一眼分开。core 只用于最亮的心与高光。
   const STAR_COLORS = {
@@ -21,6 +21,8 @@
     pine:   { core: '#eafff4', ray: '#2fb85a', halo: '#118a48' },
     sky:    { core: '#ecfaff', ray: '#4fd2ff', halo: '#20a8e0' },
     blue:   { core: '#e8f8ff', ray: '#00c2ff', halo: '#0098d8' },
+    sand:   { core: '#fff3dc', ray: '#e0a060', halo: '#b87838' },
+    plum:   { core: '#ffe8fb', ray: '#ff4fc8', halo: '#d428a0' },
   };
   function starColor(color) {
     return STAR_COLORS[color] || { core: '#fff8e8', ray: '#e8c88a', halo: '#c89a50' };
@@ -32,6 +34,10 @@
     return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
   }
   function rgba(hex, a) {
+    if (typeof hex === 'string' && hex.startsWith('rgb(')) {
+      const m = hex.match(/\d+/g) || [0, 0, 0];
+      return `rgba(${m[0]},${m[1]},${m[2]},${a})`;
+    }
     const c = hexToRgb(hex);
     return `rgba(${c.r},${c.g},${c.b},${a})`;
   }
@@ -236,7 +242,8 @@
     const key = `${ART_VERSION}|${color}|${cell.toFixed(2)}|${dpr}|${variant.toFixed(2)}`;
     if (spriteCache.has(key)) return spriteCache.get(key);
     const sc = starColor(color);
-    const S = Math.max(22, cell * 1.44);
+    // 星点大小只由本关格距决定：整颗星（含柔光）略小于一格，星与星之间只留细缝。
+    const S = Math.max(10, cell * 0.96);
     const cv = document.createElement('canvas');
     cv.width = Math.ceil(S * dpr);
     cv.height = Math.ceil(S * dpr);
@@ -246,17 +253,17 @@
 
     // 1) 柔和但色相明确的 bloom：让相邻星点之间只留很细的夜空缝。
     c.globalCompositeOperation = 'lighter';
-    let g = c.createRadialGradient(cx, cy, 0, cx, cy, S * .43);
-    g.addColorStop(0, rgba(sc.ray, .34));
-    g.addColorStop(.30, rgba(sc.halo, .22));
-    g.addColorStop(.64, rgba(sc.halo, .08));
+    let g = c.createRadialGradient(cx, cy, 0, cx, cy, S * .49);
+    g.addColorStop(0, rgba(sc.ray, .44));
+    g.addColorStop(.34, rgba(sc.halo, .28));
+    g.addColorStop(.70, rgba(sc.halo, .10));
     g.addColorStop(1, rgba(sc.halo, 0));
     c.fillStyle = g;
-    c.beginPath(); c.arc(cx, cy, S * .43, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(cx, cy, S * .49, 0, Math.PI * 2); c.fill();
 
     // 2) 饱满的四芒星体：用实心星形取代原来的细十字，空隙自然变小。
-    const outer = S * .36;
-    const inner = S * (.165 + variant * .014);
+    const outer = S * .46;
+    const inner = S * (.210 + variant * .014);
     const starPath = (rOut, rIn) => {
       c.beginPath();
       for (let i = 0; i < 8; i++) {
@@ -371,6 +378,57 @@
     ctx.restore();
   }
 
+  /* ---------------- 卡通原图加载 / 通关显现 ---------------- */
+  const cartoonCache = new Map();
+  function cartoonSource(level) {
+    if (!level) return null;
+    return level.art || (global.SHIGUANG_CARTOONS && global.SHIGUANG_CARTOONS[level.id]) || null;
+  }
+  function cartoonImage(level) {
+    const src = cartoonSource(level);
+    if (!src || typeof Image === 'undefined') return null;
+    let rec = cartoonCache.get(level.id);
+    if (!rec) {
+      const img = new Image();
+      img.decoding = 'async';
+      rec = { img, ready: false, src };
+      img.onload = () => {
+        rec.ready = true;
+        artCache.clear();
+        if (typeof global.SHIGUANG_ON_ART_LOAD === 'function') global.SHIGUANG_ON_ART_LOAD(level.id);
+      };
+      img.onerror = () => { rec.failed = true; };
+      img.src = src;
+      cartoonCache.set(level.id, rec);
+    }
+    return rec.ready ? rec.img : null;
+  }
+  function preloadArt(levels) {
+    if (typeof Image === 'undefined') return Promise.resolve();
+    return Promise.all((levels || []).map(level => new Promise(resolve => {
+      const src = cartoonSource(level);
+      if (!src) return resolve();
+      let rec = cartoonCache.get(level.id);
+      if (!rec) {
+        const img = new Image();
+        img.decoding = 'async';
+        rec = { img, ready: false, src };
+        img.onload = () => { rec.ready = true; artCache.clear(); resolve(); };
+        img.onerror = () => { rec.failed = true; resolve(); };
+        img.src = src;
+        cartoonCache.set(level.id, rec);
+      } else if (rec.ready) resolve();
+      else if (rec.failed) resolve();
+      else {
+        const old = rec.img;
+        const prev = old.onload;
+        old.onload = (e) => { if (prev) prev(e); resolve(); };
+      }
+    })));
+  }
+
+  // 通关原画：读取与关卡对应的卡通原图，按同一块画布铺满。
+  // 摘星盘面的每一格由这张图按 N×N 取样量化而来，所以显现时格与格天然对得上。
   function fullArtCanvas(level, size, dpr) {
     const key = `${ART_VERSION}|${level.id || 'level'}|${Math.round(size)}|${dpr}`;
     if (artCache.has(key)) return artCache.get(key);
@@ -379,50 +437,25 @@
     cv.height = Math.max(1, Math.round(size * dpr));
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const N = level.cells.length, cell = size / N;
-    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-      paintFacet(c, x * cell, y * cell, cell, level.cells[y][x], 1);
-    }
-    // 画面整体空气感
-    const g = c.createLinearGradient(0, 0, size, size);
-    g.addColorStop(0, 'rgba(255,231,177,.07)');
-    g.addColorStop(.42, 'rgba(255,247,225,.018)');
-    g.addColorStop(1, 'rgba(118,95,180,.07)');
-    c.fillStyle = g; c.fillRect(0, 0, size, size);
-    // 星屑与柔光：让完整原画像一块被点亮的彩窗
-    c.save();
-    c.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 18; i++) {
-      const px = size * hash2(i, 4, 41);
-      const py = size * hash2(i, 9, 43);
-      const a = .08 + hash2(i, 2, 47) * .18;
-      const r = .7 + hash2(i, 6, 53) * 1.3;
-      c.fillStyle = `rgba(255,244,210,${a})`;
-      c.beginPath();
-      for (let k = 0; k < 4; k++) {
-        const ang = k * Math.PI / 2;
-        c.lineTo(px + Math.cos(ang) * r * 2.7, py + Math.sin(ang) * r * 2.7);
-        c.lineTo(px + Math.cos(ang + Math.PI / 4) * r * .55, py + Math.sin(ang + Math.PI / 4) * r * .55);
-      }
-      c.closePath(); c.fill();
-    }
-    c.restore();
-    // 低分辨率回采的柔光，不靠降画质
-    try {
-      const bcv = document.createElement('canvas');
-      bcv.width = Math.max(8, Math.round(cv.width / 4));
-      bcv.height = Math.max(8, Math.round(cv.height / 4));
-      const bc = bcv.getContext('2d');
-      bc.imageSmoothingEnabled = true;
-      bc.drawImage(cv, 0, 0, bcv.width, bcv.height);
-      c.save();
-      c.setTransform(1, 0, 0, 1, 0, 0);
-      c.globalCompositeOperation = 'lighter';
-      c.globalAlpha = .10;
+    const img = cartoonImage(level);
+    if (img) {
       c.imageSmoothingEnabled = true;
-      c.drawImage(bcv, 0, 0, cv.width, cv.height);
-      c.restore();
-    } catch (e) { /* 老浏览器忽略柔光，不改主画面 */ }
+      c.drawImage(img, 0, 0, size, size);
+    } else {
+      // 图片尚未解码时的同格回退；加载完成后缓存会清空并重绘。
+      const N = level.cells.length, cell = size / N;
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const p = PALETTE[level.cells[y][x]] || { fill: '#555', glow: '#aaa' };
+        c.fillStyle = p.fill;
+        c.fillRect(x * cell, y * cell, cell + .25, cell + .25);
+      }
+    }
+    // 一层很轻的温润空气光，不把卡通原图洗成彩窗。
+    const g = c.createLinearGradient(0, 0, size, size);
+    g.addColorStop(0, 'rgba(255,231,177,.045)');
+    g.addColorStop(.42, 'rgba(255,247,225,.012)');
+    g.addColorStop(1, 'rgba(118,95,180,.05)');
+    c.fillStyle = g; c.fillRect(0, 0, size, size);
     artCache.set(key, cv);
     return cv;
   }
@@ -604,58 +637,58 @@
 
   /* ---------------- 小精灵（首页静态 SVG） ---------------- */
   function fairySVG() {
-    return `<svg viewBox="0 0 64 64" role="presentation" aria-hidden="true">
+    return `<svg viewBox="0 0 72 72" role="presentation" aria-hidden="true">
       <defs>
-        <linearGradient id="fairy-wing" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#fff8e4" stop-opacity=".86"/>
-          <stop offset=".46" stop-color="#ffe3a4" stop-opacity=".6"/>
-          <stop offset="1" stop-color="#8fd4c8" stop-opacity=".42"/>
+        <linearGradient id="fairy-sail-up" x1="0" y1="1" x2=".6" y2="0">
+          <stop offset="0" stop-color="#ffefc7" stop-opacity=".62"/>
+          <stop offset=".48" stop-color="#ffe1a0" stop-opacity=".54"/>
+          <stop offset="1" stop-color="#fff9e8" stop-opacity=".78"/>
         </linearGradient>
-        <linearGradient id="fairy-wing2" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#ffe9b8" stop-opacity=".7"/>
-          <stop offset="1" stop-color="#b79be8" stop-opacity=".32"/>
+        <linearGradient id="fairy-sail-low" x1="0" y1="0" x2=".7" y2="1">
+          <stop offset="0" stop-color="#c99a6c" stop-opacity=".7"/>
+          <stop offset=".5" stop-color="#9a755f" stop-opacity=".6"/>
+          <stop offset="1" stop-color="#7d5d58" stop-opacity=".5"/>
         </linearGradient>
-        <linearGradient id="fairy-dress" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#fff8e7"/>
-          <stop offset=".32" stop-color="#ffe2a2"/>
-          <stop offset=".8" stop-color="#e8b96d"/>
-          <stop offset="1" stop-color="#c98f75"/>
-        </linearGradient>
+        <radialGradient id="fairy-body-g" cx="42%" cy="36%" r="70%">
+          <stop offset="0" stop-color="#fff7d8"/>
+          <stop offset=".5" stop-color="#ffe3a8"/>
+          <stop offset="1" stop-color="#d6a265"/>
+        </radialGradient>
         <radialGradient id="fairy-aura" cx="50%" cy="50%" r="50%">
-          <stop offset="0" stop-color="#ffe6a8" stop-opacity=".45"/>
-          <stop offset=".5" stop-color="#ffcf7a" stop-opacity=".14"/>
+          <stop offset="0" stop-color="#ffe6a8" stop-opacity=".32"/>
+          <stop offset=".55" stop-color="#ffcf7a" stop-opacity=".10"/>
           <stop offset="1" stop-color="#ffcf7a" stop-opacity="0"/>
         </radialGradient>
       </defs>
-      <circle cx="32" cy="32" r="26" fill="url(#fairy-aura)"/>
+      <circle cx="36" cy="34" r="31" fill="url(#fairy-aura)"/>
       <g class="fairy-wings">
-        <g class="wing-l">
-          <path d="M29 32 C20 14 10 9 8 15 C6 21 15 31 29 35 Z" fill="url(#fairy-wing)" stroke="#fff4d8" stroke-opacity=".72" stroke-width=".8"/>
-          <path d="M29 34 C20 41 15 50 20 53 C25 56 30 44 30 37 Z" fill="url(#fairy-wing2)" stroke="#fff4d8" stroke-opacity=".54" stroke-width=".7"/>
-          <path d="M28 33 C20 24 14 18 10 16 M28 34 C23 40 20 46 20 51" fill="none" stroke="#fff8e6" stroke-opacity=".46" stroke-width=".6"/>
-        </g>
-        <g class="wing-r">
-          <path d="M35 32 C44 14 54 9 56 15 C58 21 49 31 35 35 Z" fill="url(#fairy-wing)" stroke="#fff4d8" stroke-opacity=".72" stroke-width=".8"/>
-          <path d="M35 34 C44 41 49 50 44 53 C39 56 34 44 34 37 Z" fill="url(#fairy-wing2)" stroke="#fff4d8" stroke-opacity=".54" stroke-width=".7"/>
-          <path d="M36 33 C44 24 50 18 54 16 M36 34 C41 40 44 46 44 51" fill="none" stroke="#fff8e6" stroke-opacity=".46" stroke-width=".6"/>
-        </g>
+        <path d="M32 37 C26 25 22 13 26 9 C30 5 37 15 39 26 C40 31 37 36 32 37Z" fill="url(#fairy-sail-up)" stroke="#fff4d8" stroke-opacity=".8" stroke-width="1.1"/>
+        <path d="M40 37 C46 25 50 13 46 9 C42 5 35 15 33 26 C32 31 35 36 40 37Z" fill="url(#fairy-sail-up)" stroke="#fff4d8" stroke-opacity=".8" stroke-width="1.1"/>
+        <path d="M32 38 C27 45 26 53 30 55 C34 57 38 48 38 42Z" fill="url(#fairy-sail-low)" stroke="#fff4d8" stroke-opacity=".55" stroke-width=".9"/>
+        <path d="M40 38 C45 45 46 53 42 55 C38 57 34 48 34 42Z" fill="url(#fairy-sail-low)" stroke="#fff4d8" stroke-opacity=".55" stroke-width=".9"/>
       </g>
       <g class="fairy-body">
-        <path d="M30 41 C29 45 28 47 27 49 M34 41 C35 45 36 47 37 49" fill="none" stroke="#ffe6ae" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M32 31 C36 31 38 35 38 39 C38 43 42 46 43 48 C38 50 26 50 21 48 C22 46 26 43 26 39 C26 35 28 31 32 31 Z" fill="url(#fairy-dress)" stroke="#5b3a51" stroke-opacity=".42" stroke-width=".7"/>
-        <path d="M27 38 C31 37 34 37 37 38" fill="none" stroke="#fff9e6" stroke-opacity=".78" stroke-width=".8"/>
-        <path d="M27 35 C25 38 24 41 24 44 M37 35 C39 38 40 41 40 44" fill="none" stroke="#ffe2a0" stroke-width="1.35" stroke-linecap="round"/>
-        <circle cx="32" cy="26.4" r="4.3" fill="#fff5cf"/>
-        <path d="M28 25 C28 21.4 36 21.4 36 25 C34.7 23.6 29.3 23.6 28 25 Z" fill="#c98f75"/>
-        <circle cx="30.6" cy="26.6" r=".62" fill="#4a3150"/>
-        <circle cx="33.4" cy="26.6" r=".62" fill="#4a3150"/>
-        <circle cx="28.9" cy="24.9" r=".8" fill="#fffdf3" opacity=".9"/>
-        <path d="M32 32 L33 35 L36 36 L33 37 L32 40 L31 37 L28 36 L31 35 Z" fill="#fff3c4"/>
+        <path d="M31 50 C30 55 29 58 27 61 M41 50 C42 55 43 58 45 61" fill="none" stroke="#f4ce93" stroke-width="2" stroke-linecap="round"/>
+        <path d="M36 40 C40 40 42 45 42 50 C42 55 46 58 47 60 C42 63 30 63 25 60 C26 58 30 55 30 50 C30 45 32 40 36 40Z" fill="url(#fairy-body-g)" stroke="#5b3a51" stroke-opacity=".5" stroke-width=".9"/>
+        <path d="M30 47 C33 46 39 46 42 47" fill="none" stroke="#fff9e6" stroke-opacity=".8" stroke-width="1"/>
+        <path d="M30 46 C27 49 26 53 27 56 M42 46 C45 49 46 53 45 56" fill="none" stroke="#ffe2a0" stroke-width="1.7" stroke-linecap="round"/>
+        <circle cx="36" cy="33" r="6.1" fill="url(#fairy-body-g)"/>
+        <path d="M30 32 C30 26 42 26 42 32 C40 29 32 29 30 32Z" fill="#b78358"/>
+        <circle cx="33.7" cy="33.4" r=".9" fill="#3a2547"/>
+        <circle cx="38.3" cy="33.4" r=".9" fill="#3a2547"/>
+        <circle cx="31.2" cy="31" r="1.15" fill="#fffdf3" opacity=".92"/>
+        <path d="M36 39 L37.3 42 L40 43 L37.3 44 L36 47 L34.7 44 L32 43 L34.7 42Z" fill="#fff3c4"/>
       </g>
     </svg>`;
   }
 
   /* ---------------- 小精灵 ---------------- */
+  function starSizeForCell(cell) { return Math.max(10, cell * 0.96); }
+  function fairyScaleForCell(cell) {
+    // 内部展开约 22 单位宽；含翅膀始终比一格小一截。密度越高，格越小，精灵越小。
+    return clamp(cell * 0.82 / 22, .32, 1.25);
+  }
+
   function drawFairy(ctx, x, y, color, opts) {
     opts = opts || {};
     const p = PALETTE[color] || { fill: '#e6cf9d', glow: '#fff1c7' };
@@ -665,170 +698,173 @@
     const idle = !!opts.idle;
     const flap = idle
       ? (.58 + .42 * Math.abs(Math.sin(time * .0019 + phase)))
-      : (.55 + .45 * Math.abs(Math.sin(time * .017 + phase)));
-    const angle = opts.angle || 0;
-    const bob = Math.sin(time * .006 + phase) * (idle ? 1.15 : .55);
+      : (.55 + .45 * Math.abs(Math.sin(time * .011 + phase)));
+    const angle = clamp(opts.angle || 0, -.42, .42);
+    const bob = Math.sin(time * .0062 + phase) * (idle ? 1.2 : .62);
     const scale = opts.scale || 1;
     const lit = !!opts.glow;
+    // 上翼偏浅、下翼更深，都随当前颜色组。
+    const upLight = mix(p.glow, '#fff8ea', lit ? .68 : .46);
+    const upDeep = mix(p.fill, p.glow, lit ? .55 : .32);
+    const lowLight = mix(p.fill, sc.ray, lit ? .50 : .28);
+    const lowDeep = mix(p.fill, '#241a30', .30);
     ctx.save();
     ctx.translate(x, y + bob);
     if (opts.trail && lit && opts.trail.length > 1) {
       for (let i = Math.max(0, opts.trail.length - 7); i < opts.trail.length - 1; i++) {
         const q = opts.trail[i];
-        const a = (i / opts.trail.length) * .16;
+        const a = (i / opts.trail.length) * .13;
         ctx.fillStyle = rgba(sc.ray, a);
-        ctx.beginPath(); ctx.arc(q.x - x, q.y - y, 2.4 * (i / opts.trail.length) + .6, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(q.x - x, q.y - y, 2.1 * (i / opts.trail.length) + .5, 0, Math.PI * 2); ctx.fill();
       }
     }
     ctx.rotate(angle);
     ctx.scale(scale, scale);
 
-    // 载星回程：整个人和翅膀一起亮；空载去程没有外晕。
+    // 空载去程不发光；载星回程才加外晕和提亮。
     if (lit) {
-      const aura = ctx.createRadialGradient(0, -2, 0, 0, -2, 25);
-      aura.addColorStop(0, rgba(sc.core, .40));
-      aura.addColorStop(.34, rgba(p.glow, .22));
+      const aura = ctx.createRadialGradient(0, -2, 0, 0, -2, 19);
+      aura.addColorStop(0, rgba(sc.core, .34));
+      aura.addColorStop(.36, rgba(p.glow, .18));
       aura.addColorStop(1, rgba(sc.ray, 0));
       ctx.fillStyle = aura;
-      ctx.beginPath(); ctx.arc(0, -2, 25, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, -2, 19, 0, Math.PI * 2); ctx.fill();
     }
 
-    // 玻璃翅：一对上翅 + 一对下翅，根部收在肩后，能看出是“翅”而不是四瓣花。
+    // 一对上扬的玻璃圆帆：根部收在肩后，上翼大而浅、下翼小而深。
     const wing = (side) => {
       ctx.save();
-      ctx.scale(side * (.58 + .42 * flap), 1);
-      ctx.globalCompositeOperation = lit ? 'lighter' : 'source-over';
-      // 上翅
+      ctx.translate(side * 1.15, -4.25);
+      ctx.rotate(side * (1 - flap) * .16);
+      ctx.scale(side * (.56 + .44 * flap), 1);
+      const stroke = rgba(sc.core, lit ? .88 : .40);
+      // 上翼：长圆帆
       ctx.beginPath();
-      ctx.moveTo(1.1, -3.4);
-      ctx.bezierCurveTo(5.2, -12.2, 13.6, -13.4, 13.6, -6.1);
-      ctx.bezierCurveTo(13.6, -1.6, 6.8, 1.5, 1.2, .2);
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(2.2, -5.8, 6.2, -14.8, 8.8, -14.0);
+      ctx.bezierCurveTo(11.2, -13.2, 10.2, -5.4, 8.1, -1.7);
+      ctx.bezierCurveTo(6.2, 1.0, 2.4, 1.0, 0, 0);
       ctx.closePath();
-      let wg = ctx.createLinearGradient(1, -9, 13, 3);
-      wg.addColorStop(0, rgba(sc.core, lit ? .82 : .46));
-      wg.addColorStop(.48, rgba(p.glow, lit ? .58 : .30));
-      wg.addColorStop(1, rgba(sc.ray, lit ? .44 : .18));
+      let wg = ctx.createLinearGradient(1.5, -11, 10, 1);
+      wg.addColorStop(0, rgba(upLight, lit ? .94 : .72));
+      wg.addColorStop(.52, rgba(upDeep, lit ? .78 : .58));
+      wg.addColorStop(1, rgba(upDeep, lit ? .52 : .34));
       ctx.fillStyle = wg;
       ctx.fill();
-      ctx.strokeStyle = rgba(sc.core, lit ? .88 : .38);
-      ctx.lineWidth = lit ? .8 : .55;
-      ctx.stroke();
-      // 下翅
+      ctx.strokeStyle = stroke; ctx.lineWidth = lit ? .9 : .62; ctx.stroke();
+      // 下翼：短一号、更深
       ctx.beginPath();
-      ctx.moveTo(1.2, -.2);
-      ctx.bezierCurveTo(6.4, 2.6, 9.2, 7.4, 6.2, 11.2);
-      ctx.bezierCurveTo(3.8, 14.2, .8, 7.2, .4, 2.4);
+      ctx.moveTo(0, .5);
+      ctx.bezierCurveTo(3.0, 2.0, 5.8, 5.4, 5.5, 8.4);
+      ctx.bezierCurveTo(5.1, 10.8, 1.8, 7.0, 0, 2.2);
       ctx.closePath();
-      wg = ctx.createLinearGradient(1, 2, 7, 11);
-      wg.addColorStop(0, rgba(p.glow, lit ? .58 : .26));
-      wg.addColorStop(1, rgba(sc.ray, lit ? .40 : .15));
+      wg = ctx.createLinearGradient(1, 2, 6, 10);
+      wg.addColorStop(0, rgba(lowLight, lit ? .84 : .60));
+      wg.addColorStop(1, rgba(lowDeep, lit ? .72 : .48));
       ctx.fillStyle = wg;
       ctx.fill();
-      ctx.strokeStyle = rgba(sc.core, lit ? .72 : .30);
-      ctx.lineWidth = lit ? .65 : .5;
-      ctx.stroke();
-      // 翼脉：两条主脉 + 一点横脉
-      ctx.strokeStyle = rgba(sc.core, lit ? .62 : .22);
-      ctx.lineWidth = .48;
+      ctx.strokeStyle = rgba(sc.ray, lit ? .72 : .30); ctx.lineWidth = lit ? .72 : .5; ctx.stroke();
+      // 玻璃翼脉
+      ctx.strokeStyle = rgba(sc.core, lit ? .62 : .24);
+      ctx.lineWidth = .46;
       ctx.beginPath();
-      ctx.moveTo(1.4, -3.2); ctx.quadraticCurveTo(7.4, -8.6, 12.8, -7.2);
-      ctx.moveTo(1.4, -.4); ctx.quadraticCurveTo(5.6, 4.4, 6.2, 9.6);
-      ctx.moveTo(6.2, -5.2); ctx.quadraticCurveTo(8.2, -2.2, 10.4, -1.2);
+      ctx.moveTo(.4, -.4); ctx.quadraticCurveTo(5.4, -8.8, 8.4, -12.6);
+      ctx.moveTo(.5, -.2); ctx.quadraticCurveTo(4.8, -3.4, 8.3, -2.2);
+      ctx.moveTo(.4, 1.0); ctx.quadraticCurveTo(2.8, 4.2, 5.0, 8.2);
       ctx.stroke();
+      // 翼根的一点亮
+      ctx.fillStyle = rgba(sc.core, lit ? .82 : .42);
+      ctx.beginPath(); ctx.arc(0, -.2, .9, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     };
     wing(-1); wing(1);
 
-    // 腿：细而短，让剪影从“光球”变成小角色。
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.strokeStyle = rgba(p.fill, lit ? .95 : .82);
-    ctx.lineWidth = 1.25;
+    // 腿：短而清楚，让剪影从光球变成小角色。
+    ctx.strokeStyle = rgba(p.glow, lit ? .98 : .84);
+    ctx.lineWidth = 1.15;
     ctx.lineCap = 'round';
-    const step = Math.sin(time * .014 + phase) * .55;
+    const step = Math.sin(time * .012 + phase) * .55;
     ctx.beginPath();
-    ctx.moveTo(-1.35, 3.1); ctx.quadraticCurveTo(-1.7 + step, 6.4, -2.5 + step, 8.4);
-    ctx.moveTo(1.35, 3.1); ctx.quadraticCurveTo(1.7 - step, 6.4, 2.5 - step, 8.4);
+    ctx.moveTo(-1.15, 2.7); ctx.quadraticCurveTo(-1.5 + step, 5.2, -2.15 + step, 6.7);
+    ctx.moveTo(1.15, 2.7); ctx.quadraticCurveTo(1.5 - step, 5.2, 2.15 - step, 6.7);
     ctx.stroke();
 
-    // 裙身：上窄下宽，肩、腰、裙摆都能读出来。
+    // 裙身：肩窄、裙摆宽，保留腰部一道亮带。
     ctx.beginPath();
-    ctx.moveTo(-2.55, -3.35);
-    ctx.quadraticCurveTo(-1.55, -1.1, -1.7, 1.1);
-    ctx.quadraticCurveTo(-2.9, 2.2, -3.55, 3.7);
-    ctx.quadraticCurveTo(0, 4.9, 3.55, 3.7);
-    ctx.quadraticCurveTo(2.9, 2.2, 1.7, 1.1);
-    ctx.quadraticCurveTo(1.55, -1.1, 2.55, -3.35);
-    ctx.quadraticCurveTo(0, -4.55, -2.55, -3.35);
+    ctx.moveTo(-2.25, -3.0);
+    ctx.quadraticCurveTo(-1.45, -1.0, -1.55, .9);
+    ctx.quadraticCurveTo(-2.7, 1.9, -3.25, 3.2);
+    ctx.quadraticCurveTo(0, 4.3, 3.25, 3.2);
+    ctx.quadraticCurveTo(2.7, 1.9, 1.55, .9);
+    ctx.quadraticCurveTo(1.45, -1.0, 2.25, -3.0);
+    ctx.quadraticCurveTo(0, -4.1, -2.25, -3.0);
     ctx.closePath();
-    const bg = ctx.createLinearGradient(0, -4, 0, 4.6);
-    bg.addColorStop(0, rgba(sc.core, lit ? .94 : .68));
-    bg.addColorStop(.34, rgba(p.glow, lit ? .95 : .78));
-    bg.addColorStop(.78, rgba(p.fill, lit ? .98 : .90));
-    bg.addColorStop(1, rgba(p.fill, lit ? .92 : .84));
+    const bg = ctx.createLinearGradient(0, -4, 0, 4.2);
+    bg.addColorStop(0, rgba(sc.core, lit ? .96 : .72));
+    bg.addColorStop(.34, rgba(p.glow, lit ? .96 : .82));
+    bg.addColorStop(.78, rgba(p.fill, lit ? .98 : .92));
+    bg.addColorStop(1, rgba(p.fill, lit ? .94 : .86));
     ctx.fillStyle = bg;
     ctx.fill();
-    ctx.strokeStyle = rgba('#231735', .48);
-    ctx.lineWidth = .55;
+    ctx.strokeStyle = rgba('#231735', .46);
+    ctx.lineWidth = .5;
     ctx.stroke();
-    // 腰间的一点亮带
-    ctx.strokeStyle = rgba(sc.core, lit ? .9 : .5);
-    ctx.lineWidth = .7;
-    ctx.beginPath(); ctx.moveTo(-1.9, -.1); ctx.quadraticCurveTo(0, .65, 1.9, -.1); ctx.stroke();
+    ctx.strokeStyle = rgba(sc.core, lit ? .92 : .54);
+    ctx.lineWidth = .65;
+    ctx.beginPath(); ctx.moveTo(-1.7, -.05); ctx.quadraticCurveTo(0, .55, 1.7, -.05); ctx.stroke();
 
-    // 手臂：空载时垂在身侧，载星时在胸前捧住那颗星。
-    ctx.strokeStyle = rgba(p.glow, lit ? .98 : .84);
-    ctx.lineWidth = 1.1;
+    // 手臂：空载垂在身侧，载星在胸前捧住星光。
+    ctx.strokeStyle = rgba(p.glow, lit ? .99 : .86);
+    ctx.lineWidth = 1.02;
     ctx.beginPath();
     if (opts.carrying) {
-      ctx.moveTo(-2.2, -2.7); ctx.quadraticCurveTo(-4.1, -.4, -1.7, 1.9);
-      ctx.moveTo(2.2, -2.7); ctx.quadraticCurveTo(4.1, -.4, 1.7, 1.9);
+      ctx.moveTo(-1.95, -2.45); ctx.quadraticCurveTo(-3.7, -.3, -1.5, 1.7);
+      ctx.moveTo(1.95, -2.45); ctx.quadraticCurveTo(3.7, -.3, 1.5, 1.7);
     } else {
-      ctx.moveTo(-2.2, -2.7); ctx.quadraticCurveTo(-3.5, -.2, -3.2, 2.5);
-      ctx.moveTo(2.2, -2.7); ctx.quadraticCurveTo(3.5, -.2, 3.2, 2.5);
+      ctx.moveTo(-1.95, -2.45); ctx.quadraticCurveTo(-3.2, -.2, -2.9, 2.2);
+      ctx.moveTo(1.95, -2.45); ctx.quadraticCurveTo(3.2, -.2, 2.9, 2.2);
     }
     ctx.stroke();
 
-    // 头：圆头 + 深色发际 + 两点眼睛，确保缩到一格内仍能读成“有身体的小精灵”。
-    const headY = -6.9, headR = 2.55;
-    const hg = ctx.createRadialGradient(-.7, headY - .9, 0, 0, headY, headR);
+    // 头：圆头 + 深色发际 + 两点眼睛。
+    const headY = -6.15, headR = 2.35;
+    const hg = ctx.createRadialGradient(-.55, headY - .8, 0, 0, headY, headR);
     hg.addColorStop(0, rgba(sc.core, .99));
-    hg.addColorStop(.44, rgba(p.glow, .98));
-    hg.addColorStop(.86, rgba(p.fill, .98));
+    hg.addColorStop(.46, rgba(p.glow, .98));
+    hg.addColorStop(.88, rgba(p.fill, .98));
     hg.addColorStop(1, rgba(p.fill, .9));
     ctx.fillStyle = hg;
     ctx.beginPath(); ctx.arc(0, headY, headR, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = rgba('#231735', .42); ctx.lineWidth = .45; ctx.stroke();
-    // 头发：上缘一笔，颜色取该组更深的一端
-    ctx.fillStyle = rgba(p.fill, .94);
+    ctx.strokeStyle = rgba('#231735', .40); ctx.lineWidth = .42; ctx.stroke();
+    ctx.fillStyle = rgba(p.fill, .96);
     ctx.beginPath();
-    ctx.arc(0, headY, headR, Math.PI * 1.03, Math.PI * 1.97);
-    ctx.quadraticCurveTo(1.4, headY - 1.5, 0, headY - 1.1);
-    ctx.quadraticCurveTo(-1.4, headY - 1.5, -headR, headY);
+    ctx.arc(0, headY, headR, Math.PI * 1.02, Math.PI * 1.98);
+    ctx.quadraticCurveTo(1.2, headY - 1.45, 0, headY - 1.0);
+    ctx.quadraticCurveTo(-1.2, headY - 1.45, -headR, headY);
     ctx.closePath(); ctx.fill();
-    // 眼睛与面部高光
-    ctx.fillStyle = 'rgba(38,26,58,.78)';
-    ctx.beginPath(); ctx.arc(-.85, headY + .18, .42, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(.85, headY + .18, .42, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = rgba(sc.core, .8);
-    ctx.beginPath(); ctx.arc(-1.45, headY - .75, .55, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(38,26,58,.82)';
+    ctx.beginPath(); ctx.arc(-.72, headY + .22, .38, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(.72, headY + .22, .38, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = rgba(sc.core, .85);
+    ctx.beginPath(); ctx.arc(-1.25, headY - .68, .48, 0, Math.PI * 2); ctx.fill();
 
-    // 载星：胸前一颗小星，颜色与所载星一致。
+    // 载星：胸前一颗小星。
     if (opts.carrying) {
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
-      const st = 2.7 + Math.sin(time * .008) * .3;
-      const sg = ctx.createRadialGradient(0, 1.35, 0, 0, 1.35, st * 2.4);
+      const st = 2.4 + Math.sin(time * .008) * .25;
+      const sg = ctx.createRadialGradient(0, 1.15, 0, 0, 1.15, st * 2.2);
       sg.addColorStop(0, rgba(sc.core, .9));
-      sg.addColorStop(.34, rgba(sc.ray, .55));
+      sg.addColorStop(.34, rgba(sc.ray, .52));
       sg.addColorStop(1, rgba(sc.ray, 0));
       ctx.fillStyle = sg;
-      ctx.beginPath(); ctx.arc(0, 1.35, st * 2.4, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 1.15, st * 2.2, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = rgba(sc.core, .98);
       ctx.beginPath();
       for (let i = 0; i < 8; i++) {
         const a = -Math.PI / 2 + i * Math.PI / 4;
         const r = i % 2 ? st * .22 : st;
-        const px = Math.cos(a) * r, py = 1.35 + Math.sin(a) * r;
+        const px = Math.cos(a) * r, py = 1.15 + Math.sin(a) * r;
         if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
       }
       ctx.closePath(); ctx.fill();
@@ -836,15 +872,14 @@
     }
 
     if (lit) {
-      // 全身的最后一层柔光：胸口偏上，避免变回一颗纯光球。
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
-      const full = ctx.createRadialGradient(0, -1.4, 0, 0, -1.4, 12);
-      full.addColorStop(0, rgba(sc.core, .18));
-      full.addColorStop(.55, rgba(p.glow, .10));
+      const full = ctx.createRadialGradient(0, -1.2, 0, 0, -1.2, 10);
+      full.addColorStop(0, rgba(sc.core, .16));
+      full.addColorStop(.55, rgba(p.glow, .09));
       full.addColorStop(1, rgba(p.glow, 0));
       ctx.fillStyle = full;
-      ctx.beginPath(); ctx.arc(0, -1.4, 12, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, -1.2, 10, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
     ctx.restore();
@@ -875,7 +910,7 @@
   }
 
   global.SHIGUANG_ART = {
-    forestSVG, cottageSVG, fairySVG, drawBoard, paintDataURL, fullArtCanvas, drawFairy, drawBurst, starColor,
+    forestSVG, cottageSVG, fairySVG, drawBoard, paintDataURL, fullArtCanvas, drawFairy, drawBurst, starColor, cartoonSource, cartoonImage, preloadArt, fairyScaleForCell, starSizeForCell,
     clearSpriteCache, palette: PALETTE, hexToRgb, rgba, mix,
   };
 })(typeof window !== 'undefined' ? window : globalThis);
