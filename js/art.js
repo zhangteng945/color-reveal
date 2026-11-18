@@ -461,6 +461,63 @@
     return cv;
   }
 
+
+  // 冰壳：只画四个白色边角与一点冷光，不改变底下星光的颜色。
+  function drawFrostCell(ctx, cx, cy, cell, t, phase) {
+    const a = cell * .46;
+    const pulse = .72 + .18 * Math.sin(t / 900 + phase * 6.28);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.strokeStyle = `rgba(226,246,255,${.55 * pulse})`;
+    ctx.fillStyle = `rgba(198,232,255,${.20 * pulse})`;
+    ctx.lineWidth = Math.max(1, cell * .045);
+    for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      ctx.beginPath();
+      ctx.moveTo(cx + sx * a, cy + sy * a - sy * cell * .30);
+      ctx.lineTo(cx + sx * a, cy + sy * a);
+      ctx.lineTo(cx + sx * a - sx * cell * .30, cy + sy * a);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.globalAlpha = .45 * pulse;
+    ctx.strokeStyle = 'rgba(245,252,255,.9)';
+    ctx.beginPath();
+    ctx.moveTo(cx - a * .62, cy - a * .18);
+    ctx.lineTo(cx - a * .18, cy - a * .18);
+    ctx.lineTo(cx - a * .18, cy - a * .62);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 星钥：叠在普通星光上的金色小钥匙，不是一种颜色。
+  function drawKeyCell(ctx, cx, cy, cell, t, phase) {
+    const pulse = .82 + .18 * Math.sin(t / 620 + phase * 6.28);
+    ctx.save();
+    ctx.translate(cx, cy - cell * .04);
+    ctx.rotate(-.55);
+    ctx.globalCompositeOperation = 'lighter';
+    const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, cell * .52);
+    glow.addColorStop(0, `rgba(255,232,160,${.34 * pulse})`);
+    glow.addColorStop(1, 'rgba(255,196,80,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(0, 0, cell * .52, 0, Math.PI * 2); ctx.fill();
+    const k = cell * .26;
+    ctx.strokeStyle = `rgba(255,224,142,${.95 * pulse})`;
+    ctx.fillStyle = `rgba(255,224,142,${.95 * pulse})`;
+    ctx.lineWidth = Math.max(1, cell * .055);
+    ctx.beginPath(); ctx.arc(0, -k * .32, k * .42, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, -k * .02);
+    ctx.lineTo(0, k * .78);
+    ctx.moveTo(0, k * .46);
+    ctx.lineTo(k * .38, k * .46);
+    ctx.moveTo(0, k * .72);
+    ctx.lineTo(k * .26, k * .72);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function drawBoard(canvas, game, opts) {
     opts = opts || {};
     const size = canvas.clientWidth || parseFloat(getComputedStyle(canvas).width) || 320;
@@ -476,6 +533,9 @@
     // 摘星阶段：画布完全透明。星星直接长在页面夜空中；
     // 没有被摘走的格子底、没有棋盘线、没有装饰散星，摘走一颗就露出真夜空。
     const reveal = opts.reveal == null ? (opts.complete ? 1 : 0) : clamp(opts.reveal, 0, 1);
+    const iceSet = game.ice instanceof Set ? game.ice : new Set(game.ice || []);
+    const keyAt = new Map();
+    for (const key of (game.keys || [])) if (!key.triggered) keyAt.set(key.index, key);
     if (reveal < 1) {
       for (let y = 0; y < N; y++) {
         for (let x = 0; x < N; x++) {
@@ -501,6 +561,10 @@
           ctx.rotate(tilt);
           ctx.drawImage(sprite.canvas, -s / 2, -s / 2, s, s);
           ctx.restore();
+
+          const cx0 = x * cell + cell / 2, cy0 = y * cell + cell / 2;
+          if (iceSet.has(index)) drawFrostCell(ctx, cx0, cy0, cell, t, phase);
+          if (keyAt.has(index)) drawKeyCell(ctx, cx0, cy0, cell, t, phase);
 
           if (highlighted) {
             const sc = starColor(color);

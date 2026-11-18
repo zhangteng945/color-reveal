@@ -571,6 +571,7 @@ button:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3px; }
   border: 1.5px dashed rgba(143, 224, 209, .72);
   box-shadow: 0 0 12px rgba(143, 224, 209, .24);
 }
+
 .queue-jar-btn.is-holding .jar {
   border-color: rgba(255, 241, 200, .85);
   box-shadow: inset 0 0 18px var(--jar-soft), 0 0 18px var(--jar-glow);
@@ -699,3 +700,49 @@ button:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
 }
+
+/* ---------- 本轮机制：连体、星锁、冰壳提示 ---------- */
+.jar.is-linked {
+  border-color: rgba(196, 224, 255, .62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 251, 239, .3),
+    inset 0 -10px 16px rgba(3, 2, 9, .42),
+    inset 0 0 16px rgba(148, 202, 255, .18),
+    0 0 0 1px rgba(180, 216, 255, .24),
+    0 0 14px rgba(137, 194, 255, .18);
+}
+.jar .jar-link-mark {
+  position: absolute; z-index: 4; right: 3px; top: 3px;
+  width: 12px; height: 12px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 7px; line-height: 1; color: #dff1ff;
+  background: rgba(32, 48, 82, .88);
+  border: 1px solid rgba(186, 220, 255, .7);
+  box-shadow: 0 0 8px rgba(137, 194, 255, .38);
+}
+.jar .jar-link-wait {
+  position: absolute; z-index: 4; left: 0; right: 0; bottom: 2px;
+  text-align: center; font-size: 7px; letter-spacing: .04em;
+  color: rgba(220, 240, 255, .92);
+  text-shadow: 0 1px 3px rgba(7, 9, 18, .9);
+}
+.jar.is-waiting-partner { filter: saturate(.62) brightness(.9); }
+.jar.is-waiting-partner::before { opacity: .32; }
+.jar.is-waiting-partner .jar-count { opacity: .55; }
+
+.queue-jar-btn.is-lock { cursor: default; }
+.queue-jar-btn.is-lock:active { transform: none; }
+.lock-jar {
+  display: grid; place-items: center;
+  background:
+    radial-gradient(60% 52% at 34% 28%, rgba(255, 231, 164, .10), transparent 68%),
+    linear-gradient(180deg, rgba(62, 52, 88, .96), rgba(19, 15, 35, .98));
+  border-color: rgba(216, 200, 238, .34);
+  box-shadow: inset 0 0 14px rgba(9, 7, 20, .62), 0 6px 14px rgba(3, 2, 9, .34);
+}
+.lock-jar .lock-glyph { width: 48%; height: 48%; color: rgba(232, 214, 255, .78); filter: drop-shadow(0 0 7px rgba(206, 170, 255, .35)); }
+.lock-jar.is-top .lock-glyph { color: rgba(255, 232, 171, .92); filter: drop-shadow(0 0 9px rgba(255, 210, 120, .45)); }
+
+/* 浅屏与 390 宽：选关仍单列滚动，不横向溢出 */
+.level-list { overflow-x: hidden; }
+.level-card { max-width: 100%; }

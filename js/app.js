@@ -13,12 +13,14 @@
   const DISPATCH_MS = 165;
   const BASE_SPEED = 158;
 
+  // 既有星具按关卡进度解锁；它们不是过关必需路径，也不改变固定五槽基础。
   const PROPS = [
     { id: 'borrow-slot', name: '借槽', glyph: '＋', unlockLevel: 3, desc: '临时多一个出巢位' },
     { id: 'pick-back', name: '选后排', glyph: '⇡', unlockLevel: 4, desc: '从一列的后排取一罐' },
     { id: 'clear-12', name: '清除', glyph: '✕', unlockLevel: 8, desc: '清除至多 12 格' },
     { id: 'absorb', name: '吸收', glyph: '◌', unlockLevel: 10, desc: '吸收同色星' },
   ];
+
   // 已验证列排列的变体：四列的全部 24 种排列，每次进入/重来随机抽一个；一局内不再变。
   const VARIANT_PERMS = (() => {
     const out = [];
@@ -32,7 +34,7 @@
   function makeVariants(level, proof) {
     if (Array.isArray(level.variants) && level.variants.length) {
       return level.variants.map((v, i) => ({
-        columns: v.columns.map(col => col.map(j => ({ color: j.color, count: j.count }))),
+        columns: v.columns.map(col => col.map(j => ({ ...j }))),
         proof: v.proof.slice(),
         actualMoves: v.actualMoves || v.proof.length,
         temptation: !!v.temptation,
@@ -41,8 +43,8 @@
     }
     const base = level.columns || [];
     return VARIANT_PERMS.map(perm => ({
-      columns: perm.map(ci => (base[ci] || []).map(j => ({ color: j.color, count: j.count }))),
-      proof: (proof || []).map(ci => perm.indexOf(ci)),
+      columns: perm.map(ci => (base[ci] || []).map(j => ({ ...j }))),
+      proof: (proof || []).map(step => Array.isArray(step) ? step.map(ci => perm.indexOf(ci)) : perm.indexOf(step)),
       actualMoves: (proof || []).length,
     }));
   }
@@ -127,8 +129,6 @@
     firstTipLevel: -1,
     timeScale: 1,
     waitingSince: {},
-    propsUsed: {},
-    propMode: null,
     holdColor: null,
     holdTimer: 0,
     holdActive: false,
@@ -140,8 +140,10 @@
     flightSpeed: BASE_SPEED,
     endgameBoostAt: 0,
     endgameBoosted: false,
-    clearLeft: 0,
     showPaths: false,
+    propsUsed: {},
+    propMode: null,
+    clearLeft: 0,
   };
 
   // 首页信息全部来自关卡数据：季、主题、第几晚、画面名、机制与难度。
@@ -192,7 +194,7 @@
       const raw = localStorage.getItem(STORE_KEY);
       if (!raw) return { completed: {}, tips: {} };
       const p = JSON.parse(raw);
-      return { completed: p.completed || {}, tips: p.tips || {} };
+      return { ...p, completed: p.completed || {}, tips: p.tips || {} };
     } catch (e) { return { completed: {}, tips: {} }; }
   }
   function saveProgress() {
@@ -226,10 +228,25 @@
     const shadow = lum > .58 ? '0 1px 0 rgba(255,255,255,.22), 0 0 6px rgba(255,255,255,.12)' : '0 1px 2px rgba(9,6,18,.85), 0 0 9px rgba(9,6,18,.5)';
     return `--jar-fill:${sc.ray};--jar-glow:${sc.core};--jar-soft:${ART.rgba(sc.ray, .18)};--jar-ink:${ink};--jar-ink-shadow:${shadow}`;
   }
-  function jarMarkup(color, count, cls) {
-    return `<span class="jar ${cls || ''}" style="${jarStyle(color)}" role="img" aria-label="${colorMeta(color).name}星罐，${count}颗星">
-      <span class="jar-shine"></span><span class="jar-count">${count}</span>
+  function jarMarkup(color, count, cls, opts) {
+    opts = opts || {};
+    const tags = [];
+    if (opts.linked) tags.push('<span class="jar-link-mark" aria-hidden="true">连</span>');
+    if (opts.waitingPartner) tags.push('<span class="jar-link-wait">等搭档</span>');
+    const aria = opts.waitingPartner ? `连体星罐，这一方已派完，等搭档` : `${colorMeta(color).name}星罐，${count}颗星${opts.linked ? '，连体' : ''}`;
+    return `<span class="jar ${cls || ''}${opts.linked ? ' is-linked' : ''}${opts.waitingPartner ? ' is-waiting-partner' : ''}" style="${jarStyle(color)}" role="img" aria-label="${aria}">
+      ${tags.join('')}<span class="jar-shine"></span><span class="jar-count">${count}</span>
     </span>`;
+  }
+  function lockMarkup(top) {
+    return `<span class="jar lock-jar${top ? ' is-top' : ''}" role="img" aria-label="星锁${top ? '，挡住了这一列' : '，锁在队列里'}">
+      <span class="lock-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="10" rx="2.4" fill="currentColor"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="15" r="1.6" fill="rgba(20,15,34,.75)"/></svg></span>
+    </span>`;
+  }
+  function isLockEntry(e) { return !!e && (e.type === 'lock' || e.lock); }
+  function proofFirstCol(proof) {
+    const first = (proof || [])[0];
+    return Array.isArray(first) ? first[0] : (first == null ? 0 : first);
   }
 
   /* ---------- 背景与小屋 ---------- */
@@ -353,6 +370,9 @@
     const variant = variants[variantIndex] || { columns: baseLevel.columns, proof: PROOFS[baseLevel.id] || [] };
     state.currentVariant = variantIndex;
     state.currentProof = variant.proof.slice();
+    state.propsUsed = {};
+    state.propMode = null;
+    state.clearLeft = 0;
     state.game = new ENGINE.ShiguangGame(
       { ...baseLevel, columns: variant.columns.map(col => col.map(j => ({ ...j }))) },
       { slotCount: 5, visibleRows: 3 }
@@ -361,7 +381,6 @@
     state.flightSpeed = BASE_SPEED;
     state.endgameBoostAt = 0;
     state.endgameBoosted = false;
-    state.clearLeft = 0;
     state.startedAt = nowMs();
     state.arriving = {};
     state.leaving = {};
@@ -382,8 +401,6 @@
     state.nextIndex = index + 1 < LEVELS.length ? index + 1 : -1;
     state.coachKey = null;
     state.waitingSince = {};
-    state.propsUsed = {};
-    state.propMode = null;
     state.holdColor = null;
     state.holdActive = false;
     state.suppressClick = false;
@@ -427,7 +444,7 @@
     const level = LEVELS[index];
     if (index === 0 && !tipSeen['first-tap']) {
       later(() => {
-        const tipCol = (state.currentProof || PROOFS[level.id] || [0])[0] || 0;
+        const tipCol = proofFirstCol(state.currentProof || PROOFS[level.id]);
         const first = el.queueGrid.querySelector(`.queue-jar-btn[data-col="${tipCol}"][data-row="0"]`);
         if (!first || state.screen !== 'play') return;
         first.classList.add('is-prompted');
@@ -479,6 +496,7 @@
 
   function renderAll() { renderQueue(); renderSlots(); updateHud(true); }
 
+  /* ---------- 星具（按进度解锁；每关各一次） ---------- */
   function propUnlocked(p) { return !!(state.game && state.game.level && (state.game.level.no || 0) >= p.unlockLevel); }
 
   function buildProps() {
@@ -504,12 +522,13 @@
 
   function useProp(id) {
     const p = PROPS.find(x => x.id === id);
-    if (!p || !state.game) return;
-    if (!propUnlocked(p)) { showToast(`第 ${p.unlockLevel} 关解锁${p.name}。`); return; }
-    if (state.propsUsed[id]) { showToast('这一关已经用过了。'); return; }
+    if (!p || !state.game) return { ok: false, reason: 'no-game' };
+    if (state.game.status !== 'playing') return { ok: false, reason: 'ended' };
+    if (!propUnlocked(p)) { showToast(`第 ${p.unlockLevel} 关解锁${p.name}。`); return { ok: false, reason: 'locked' }; }
+    if (state.propsUsed[id]) { showToast('这一关已经用过了。'); return { ok: false, reason: 'used' }; }
     if (id === 'borrow-slot') {
       const r = state.game.addSlot();
-      if (!r.ok) { showToast('出巢位已经到六位上限。'); return; }
+      if (!r.ok) { showToast('出巢位已经到六位上限。'); return r; }
       state.propsUsed[id] = true;
       buildSlots();
       renderSlots();
@@ -517,31 +536,31 @@
       updateHud(true);
       fitLayout();
       showToast('借到一个新位子。');
-      return;
+      return r;
     }
     if (id === 'pick-back') {
       state.propMode = state.propMode === 'pick-back' ? null : 'pick-back';
       buildProps();
       renderQueue();
       showToast(state.propMode ? '点一罐后排的星罐。' : '已收起选后排。');
-      return;
+      return { ok: true, mode: state.propMode };
     }
     if (id === 'clear-12') {
-      if (state.propMode === 'clear-12') { clearPropMode(); return; }
+      if (state.propMode === 'clear-12') { state.propMode = null; state.clearLeft = 0; buildProps(); renderQueue(); return { ok: true }; }
       state.propMode = 'clear-12';
       state.clearLeft = 12;
       state.propsUsed[id] = true;
       buildProps();
       renderQueue();
-      showToast('点星盘上的星，最多清除 12 颗。');
-      return;
+      showToast('点星盘上的星，最多清除 12 格。');
+      return { ok: true, clearLeft: state.clearLeft };
     }
     if (id === 'absorb') {
       const cands = state.game.absorbCandidates();
-      if (!cands.length) { showToast('现在没有可吸收的颜色。'); return; }
+      if (!cands.length) { showToast('现在没有可吸收的颜色。'); return { ok: false, reason: 'none' }; }
       const pick = cands[0];
       const r = state.game.absorbColor(pick.color);
-      if (!r.ok) { showToast('这个颜色正在槽里，换一个时机。'); return; }
+      if (!r.ok) { showToast('这个颜色正在槽里或连着别的罐，换一个时机。'); return r; }
       state.propsUsed[id] = true;
       // 吸收只允许没有在途精灵的颜色；这里再兜底清掉同色轨迹。
       state.fairies = state.fairies.filter(f => f.color !== pick.color);
@@ -551,12 +570,13 @@
       renderSlots();
       updateHud(true);
       drawBoardFrame();
-      showToast(`吸收了 ${r.removed} 颗${colorMeta(pick.color).name}星。`);
+      showToast(`吸收了 ${r.removed} 口${colorMeta(pick.color).name}星${r.iceRemoved ? '（含冰层）' : ''}。`);
       if (state.game.status === 'cleared') {
         if (!state.clearedAt) state.clearedAt = nowMs();
       }
-      return;
+      return r;
     }
+    return { ok: false, reason: 'unknown' };
   }
 
   function clearPropMode() {
@@ -580,6 +600,7 @@
     if (!res.ok) {
       if (res.reason === 'in-slot' || res.reason === 'in-flight') showToast('这个颜色正在路上，换一颗。');
       else if (res.reason === 'empty') showToast('这里已经是夜空。');
+      else if (res.reason === 'no-jar') showToast('同色星罐口数不够或连着别的罐，换一颗。');
       else showToast('这颗暂时清不了。');
       return;
     }
@@ -591,7 +612,7 @@
     renderSlots();
     drawBoardFrame();
     if (state.clearLeft <= 0 || state.game.starsLeft <= 0) clearPropMode();
-    else showToast(`还能清除 ${state.clearLeft} 颗。`, 1200);
+    else showToast(`还能清除 ${state.clearLeft} 格${res.iceCleared ? '；冰壳与颜色已一并清掉' : ''}。`, 1200);
     if (state.game.status === 'cleared') {
       if (!state.clearedAt) state.clearedAt = nowMs();
     } else if (state.game.status === 'lost') scheduleLoss(nowMs());
@@ -631,28 +652,44 @@
       const col = document.createElement('div');
       col.className = 'queue-col';
       for (let r = 0; r < game.visibleRows; r++) {
-        const jar = info.visible[r];
+        const entry = info.visible[r];
         const row = document.createElement('div');
-        row.className = 'queue-row' + (!jar ? ' is-empty' : '') + (r > 0 ? ' is-back' : '');
-        if (!jar) {
+        row.className = 'queue-row' + (!entry ? ' is-empty' : '') + (r > 0 ? ' is-back' : '');
+        if (!entry) {
+          col.appendChild(row);
+          continue;
+        }
+        const top = r === 0;
+        if (isLockEntry(entry)) {
+          const lock = document.createElement('button');
+          lock.type = 'button';
+          lock.className = 'queue-jar-btn is-lock' + (top ? ' is-top' : '');
+          lock.dataset.col = String(c);
+          lock.dataset.row = String(r);
+          lock.dataset.uid = entry.uid;
+          lock.setAttribute('aria-label', `星锁${top ? '，挡住了第 ' + (c + 1) + ' 列，先在画里找到星钥' : '，锁在队列里'}`);
+          lock.setAttribute('aria-disabled', 'true');
+          lock.tabIndex = -1;
+          lock.innerHTML = lockMarkup(top) + '<span class="tap-ring" aria-hidden="true"></span>';
+          lock.addEventListener('click', () => showToast('星锁挡住了这一列。先在画里把星钥四周清开。'));
+          row.appendChild(lock);
           col.appendChild(row);
           continue;
         }
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'queue-jar-btn' + (r === 0 && jar ? ' is-top' : '') +
-          (r === 0 && !game.hasEmptySlot ? ' is-unavailable' : '') +
-          (r > 0 && state.propMode === 'pick-back' ? ' is-back-target' : '');
+        btn.className = 'queue-jar-btn' + (top ? ' is-top' : '') + (entry.linkId ? ' is-linked' : '');
         btn.dataset.col = String(c);
         btn.dataset.row = String(r);
-        btn.dataset.uid = jar.uid;
-        const top = r === 0;
-        btn.setAttribute('aria-label', `${colorMeta(jar.color).name}星罐，${jar.count} 颗星${top ? '，可点' : '，被前面的罐子挡住'}`);
-        btn.setAttribute('aria-disabled', top && game.hasEmptySlot ? 'false' : 'true');
+        btn.dataset.uid = entry.uid;
+        if (entry.linkId) btn.dataset.link = entry.linkId;
+        btn.setAttribute('aria-label', `${colorMeta(entry.color).name}星罐，${entry.count} 颗星${entry.linkId ? '，连体' : ''}${top ? '，在队首' : '，被前面的罐子挡住'}`);
+        btn.setAttribute('aria-disabled', top ? 'false' : 'true');
         btn.tabIndex = top ? 0 : -1;
-        btn.innerHTML = jarMarkup(jar.color, jar.count, top ? 'is-top' : '') + '<span class="tap-ring" aria-hidden="true"></span>';
+        if (state.propMode === 'pick-back' && r > 0) btn.classList.add('is-back-target');
+        btn.innerHTML = jarMarkup(entry.color, entry.count, top ? 'is-top' : '', { linked: !!entry.linkId }) + '<span class="tap-ring" aria-hidden="true"></span>';
         btn.addEventListener('click', () => onQueueClick(c, r));
-        btn.addEventListener('pointerdown', () => startHold(jar.color, btn));
+        btn.addEventListener('pointerdown', () => startHold(entry.color, btn));
         btn.addEventListener('pointerup', () => endHold(btn));
         btn.addEventListener('pointercancel', () => endHold(btn));
         btn.addEventListener('pointerleave', () => endHold(btn));
@@ -663,22 +700,28 @@
       hidden.className = 'hidden-pill' + (info.hidden > 0 ? '' : ' is-none');
       hidden.innerHTML = info.hidden > 0 ? `还有 <b>${info.hidden}</b>` : '&nbsp;';
       col.appendChild(hidden);
-      // 深层罐数也读给读屏
-      if (info.hidden > 0) col.setAttribute('aria-label', `第 ${c + 1} 列，可见 ${info.visible.length} 罐，深处还有 ${info.hidden} 罐`);
+      if (info.hidden > 0) col.setAttribute('aria-label', `第 ${c + 1} 列，可见 ${info.visible.length} 个，深处还有 ${info.hidden} 个`);
       frag.appendChild(col);
     }
     el.queueGrid.innerHTML = '';
     el.queueGrid.appendChild(frag);
-    // 队列提示只显示事实，不做常驻说明书
     let hiddenTotal = 0;
+    let lockTotal = 0;
+    let linkTotal = 0;
     for (let c = 0; c < game.maxCols; c++) hiddenTotal += game.visibleQueue(c).hidden;
-    el.queueTip.textContent = game.queueEmpty ? '星罐都出发了' : (hiddenTotal > 0 ? `深处还有 ${hiddenTotal} 罐` : '四列星罐');
+    for (const col of game.columns) {
+      for (const e of col) {
+        if (isLockEntry(e)) lockTotal++;
+        else if (e.linkId) linkTotal++;
+      }
+    }
+    el.queueTip.textContent = game.queueEmpty ? '星罐都出发了'
+      : (lockTotal ? `星锁 ${lockTotal} 把 · 星罐 ${hiddenTotal ? '深处还有 ' + hiddenTotal : '在队列里'}` : (hiddenTotal > 0 ? `深处还有 ${hiddenTotal} 个` : '四列星罐'));
     el.queueCard.classList.toggle('is-final', game.queueEmptied);
-    // 第一次提示的环形高亮在重绘后重新挂回队首
     if (state.firstTipLevel === state.levelIndex && !tipSeen['first-tap']) {
-      const tipCol = (state.currentProof || PROOFS[state.game.level.id] || [0])[0] || 0;
+      const tipCol = proofFirstCol(state.currentProof || PROOFS[state.game.level.id]);
       const first = el.queueGrid.querySelector(`.queue-jar-btn[data-col="${tipCol}"][data-row="0"]`);
-      if (first) first.classList.add('is-prompted');
+      if (first && !first.classList.contains('is-lock')) first.classList.add('is-prompted');
     }
   }
 
@@ -688,7 +731,8 @@
   function mountSlotJar(cell, jar, count, opts) {
     opts = opts || {};
     const same = cell._jarEl && cell.contains(cell._jarEl) &&
-      cell._jarUid === jar.uid && cell._jarColor === jar.color;
+      cell._jarUid === jar.uid && cell._jarColor === jar.color &&
+      cell._jarLinked === !!jar.linkId && cell._jarWaitPartner === !!opts.waitingPartner;
     if (same) {
       const countEl = cell._jarEl.querySelector('.jar-count');
       if (countEl && countEl.textContent !== String(count)) countEl.textContent = String(count);
@@ -699,11 +743,14 @@
     cell.innerHTML = jarMarkup(
       jar.color,
       count,
-      'slot-jar' + (opts.waiting ? ' is-waiting' : '') + (opts.leaving ? ' leaving' : '')
+      'slot-jar' + (opts.waiting ? ' is-waiting' : '') + (opts.leaving ? ' leaving' : ''),
+      { linked: !!jar.linkId, waitingPartner: !!opts.waitingPartner }
     );
     cell._jarEl = cell.querySelector('.jar');
     cell._jarUid = jar.uid;
     cell._jarColor = jar.color;
+    cell._jarLinked = !!jar.linkId;
+    cell._jarWaitPartner = !!opts.waitingPartner;
     return cell._jarEl;
   }
 
@@ -778,9 +825,12 @@
         continue;
       }
       const ready = age >= JAR_ENTER_MS;
-      const waiting = ready && jar.remaining > 0 && game.reachableCells(jar.color).length === 0;
-      mountSlotJar(cell, jar, jar.remaining, { waiting });
-      cell.setAttribute('aria-label', `出巢位 ${i + 1}，${colorMeta(jar.color).name}星罐，还剩 ${jar.remaining} 只精灵${waiting ? '，正在等星露出来' : ''}`);
+      const waitingPartner = ready && jar.linkId && jar.remaining <= 0;
+      const waiting = ready && !waitingPartner && jar.remaining > 0 && game.reachableCells(jar.color).length === 0;
+      mountSlotJar(cell, jar, jar.remaining, { waiting, waitingPartner });
+      cell.setAttribute('aria-label', waitingPartner
+        ? `出巢位 ${i + 1}，连体星罐这一方已派完，等搭档`
+        : `出巢位 ${i + 1}，${colorMeta(jar.color).name}星罐，还剩 ${jar.remaining} 只精灵${waiting ? '，正在等星露出来' : ''}`);
       consumeSlotBounce(cell, i);
     }
   }
@@ -805,13 +855,34 @@
     if (state.screen !== 'play' || !state.game) return;
     if (state.game.status !== 'playing') return;
     if (state.loadingLevel !== null || !el.enterVeil.hidden) return;
-    const top = state.game.topJar(col);
-    if (!top) return;
     if (state.suppressClick) { state.suppressClick = false; return; }
+    const topEntry = state.game.topEntry(col);
+    if (!topEntry) return;
     const useBack = state.propMode === 'pick-back' && row > 0;
     if (row !== 0 && !useBack) {
-      showToast('只能点每列最上面的星罐。');
+      showToast('只能点每列最上面的星罐；用「选后排」才能拿后面的罐。');
       return;
+    }
+    if (isLockEntry(topEntry) && !useBack) {
+      showToast('星锁挡住了这一列。先在画里把星钥四周清开。');
+      return;
+    }
+    if (!useBack) {
+      const reason = state.game.takeReason(col);
+      if (reason) {
+        if (reason === 'need-two-slots' || reason === 'no-slot') {
+          el.slotFrame.animate
+            ? el.slotFrame.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-3px)' }, { transform: 'translateX(3px)' }, { transform: 'translateX(0)' }], { duration: 220 })
+            : null;
+          showToast(reason === 'need-two-slots' ? '连体星罐要两个空位，先留两个位子。' : '出巢位满了，等精灵出发腾出位子。');
+          maybeTip('slots-full', '五个位子满了不会立刻失败；精灵出发后罐子就会离开。', el.slotFrame, 4200);
+        } else if (reason === 'partner-not-front') {
+          showToast('连体星罐的另一罐还没到队首。');
+        } else {
+          showToast('这一列暂时没有星罐。');
+        }
+        return;
+      }
     }
     if (!state.game.hasEmptySlot) {
       el.slotFrame.animate
@@ -821,38 +892,67 @@
       maybeTip('slots-full', '五个位子满了不会立刻失败；精灵出发后罐子就会离开。', el.slotFrame, 4200);
       return;
     }
-    // 取罐前记录被点元素的位置，做一次真实的“飞入出巢位”过渡
-    const takeRow = useBack ? row : 0;
-    const btn = el.queueGrid.querySelector(`.queue-jar-btn[data-col="${col}"][data-row="${takeRow}"]`);
-    const fromRect = btn ? btn.getBoundingClientRect() : null;
-    const res = useBack ? state.game.takeJarAt(col, takeRow, nowMs()) : state.game.takeColumn(col, nowMs());
-    if (!res.ok) {
-      showToast(res.reason === 'no-slot' ? '出巢位满了，等精灵腾位。' : '这一列暂时没有星罐。');
-      return;
+    let res;
+    let takeCols;
+    let fromRects;
+    if (useBack) {
+      takeCols = [col];
+      const btn = el.queueGrid.querySelector(`.queue-jar-btn[data-col="${col}"][data-row="${row}"]`);
+      fromRects = [btn ? btn.getBoundingClientRect() : null];
+      res = state.game.takeJarAt(col, row, nowMs());
+      if (!res.ok) {
+        if (res.reason === 'linked-rear') showToast('连体星罐要在两列队首一起取，不能从后排单拿。');
+        else if (res.reason === 'locked') showToast('这一排是星锁，换一罐。');
+        else if (res.reason === 'no-slot') showToast('出巢位满了，等精灵腾位。');
+        else showToast('这一列暂时没有星罐。');
+        return;
+      }
+      state.propsUsed['pick-back'] = true;
+      clearPropMode();
+    } else {
+      const linkedPartner = state.game.linkPartnerTop(col);
+      takeCols = linkedPartner ? [col, linkedPartner.col] : [col];
+      fromRects = takeCols.map(c => {
+        const btn = el.queueGrid.querySelector(`.queue-jar-btn[data-col="${c}"][data-row="0"]`);
+        return btn ? btn.getBoundingClientRect() : null;
+      });
+      res = state.game.takeColumn(col, nowMs());
+      if (!res.ok) {
+        showToast(res.reason === 'no-slot' ? '出巢位满了，等精灵腾位。' : '这一列暂时没有星罐。');
+        return;
+      }
     }
-    if (useBack) { state.propsUsed['pick-back'] = true; clearPropMode(); }
+    const jars = res.jars || [res.jar];
+    const slotIndexes = res.slots || [res.slotIndex];
     markTip('first-tap');
     hideCoach();
     state.firstTipLevel = -1;
-    delete state.waitingSince[res.slotIndex];
-    state.arriving[res.slotIndex] = { at: nowMs(), from: fromRect, jar: res.jar };
-    flyJarGhost(fromRect, res.slotIndex, res.jar);
+    jars.forEach((jar, i) => {
+      const slotIndex = slotIndexes[i];
+      delete state.waitingSince[slotIndex];
+      state.arriving[slotIndex] = { at: nowMs(), from: fromRects[i], jar };
+      flyJarGhost(fromRects[i], slotIndex, jar);
+    });
     renderQueue();
     renderSlots();
     updateHud(true);
     later(() => {
-      delete state.arriving[res.slotIndex];
+      jars.forEach((jar, i) => {
+        const slotIndex = slotIndexes[i];
+        delete state.arriving[slotIndex];
+        maybeWaitingTip(slotIndex, jar);
+      });
       renderSlots();
-      maybeWaitingTip(res.slotIndex, res.jar);
       if (state.game && state.game.status === 'lost') scheduleLoss(nowMs());
     }, JAR_ENTER_MS + 20);
+    if (res.linked) showToast('连体星罐一起进了两个位子；一方先派完会等搭档。', 2600);
     if (res.queueEmptied) el.queueCard.classList.add('is-final');
-    const otherReachable = otherColumnsReachable(col);
-    const mineReachable = state.game.reachableCells(res.jar.color).length > 0;
+    const mineReachable = state.game.reachableCells(jars[0].color).length > 0;
+    const otherReachable = takeCols.some(c => otherColumnsReachable(c));
     if (!mineReachable && otherReachable && state.levelIndex >= 1 && !tipSeen['skip-temptation']) {
       later(() => {
         const alt = suggestAlternative(col);
-        maybeTip('skip-temptation', '这一罐暂时够不着，可以先看看别的列。', alt || state.slotEls[res.slotIndex], 4600, true);
+        maybeTip('skip-temptation', '这一罐暂时够不着，可以先看看别的列。', alt || state.slotEls[slotIndexes[0]], 4600, true);
       }, 700);
     }
     const occupied = state.game.slots.filter(s => s.jar).length;
@@ -862,7 +962,6 @@
     if (state.levelIndex === 3 && !tipSeen['leave-empty-4'] && occupied >= 4) {
       later(() => maybeTip('leave-empty-4', '位子快满了，先看哪一罐能先出发。', el.slotFrame, 4600, true), 600);
     }
-    // 立即再画一次，让首帧就有反馈
     drawBoardFrame();
     drawFx(nowMs());
   }
@@ -1331,6 +1430,14 @@
           const res = state.game.collect(f.claim.index, now);
           state.flashes.push({ x: f.claim.x, y: f.claim.y, color: col, at: now });
           state.bursts.push({ x: pos.x, y: pos.y, color: col, at: now, seed: f.phase });
+          if (res.brokeIce) {
+            maybeTip('ice-break', '冰壳碎了。罐上的数字已经把这一口算进去了。', state.slotEls[f.slotIndex], 3800, true);
+          }
+          if (res.unlocked && res.unlocked.length) {
+            showToast('星钥亮起，一把星锁打开了。', 2400);
+            renderQueue();
+            drawBoardFrame();
+          }
           updateHud(true);
           renderSlots();
           f.status = 'pick';
@@ -1486,9 +1593,13 @@
         state.lastDispatch = now;
         spawnFairy(result, now);
         if (result.slotCleared) {
-          delete state.waitingSince[result.slotIndex];
-          state.leaving[result.slotIndex] = { at: now, jar: departing || { uid: result.claim.jarUid, color: result.claim.color } };
-          later(() => { delete state.leaving[result.slotIndex]; renderSlots(); }, 300);
+          const cleared = result.clearedSlots && result.clearedSlots.length ? result.clearedSlots : [result.slotIndex];
+          for (const slotIndex of cleared) {
+            delete state.waitingSince[slotIndex];
+            const partnerJar = departingJars[slotIndex] || null;
+            state.leaving[slotIndex] = { at: now, jar: partnerJar || departing || { uid: result.claim.jarUid, color: result.claim.color } };
+            later(() => { delete state.leaving[slotIndex]; renderSlots(); }, 300);
+          }
         }
         state.slotBounce = {
           slotIndex: result.slotIndex,
@@ -1739,8 +1850,7 @@
     window.__SHIGUANG__ = {
       get game() { return state.game; },
       get state() { return state; },
-      startLevel, toHome, fitLayout,
-      useProp,
+      startLevel, toHome, fitLayout, useProp,
       get currentProof() { return state.currentProof; },
       get levelVariants() { return state.levelVariants; },
       sampleBoard(x, y) {
@@ -1837,6 +1947,9 @@
         }
         state.game.claimed.clear();
         state.game.pending = 0;
+        state.game.ice.clear();
+        state.game.collected = state.game.total;
+        state.game.colorCollected = state.game.colorTotal;
         state.game.status = 'cleared';
         state.game.slots.forEach(s => { s.jar = null; });
         state.game.columns.forEach(c => c.length = 0);
