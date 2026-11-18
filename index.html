@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#121022">
+<meta name="theme-color" content="#0b0918">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2l3.3 10.7L30 16l-10.7 3.3L16 30l-3.3-10.7L2 16l10.7-3.3z' fill='%23f5d38b'/%3E%3C/svg%3E">
 <title>拾光之旅 · 把夜空摘成一幅画</title>
-<link rel="stylesheet" href="css/style.css?v=246d2d77">
+<link rel="stylesheet" href="css/style.css?v=5de4a703">
 </head>
 <body>
 <div id="app" class="app">
   <div class="world" aria-hidden="true">
     <div class="sky-veil"></div>
+    <div class="aurora"><span class="aurora-band a"></span><span class="aurora-band b"></span><span class="aurora-band c"></span></div>
+    <div class="moon-halo"></div>
     <div class="forest" data-forest></div>
     <div class="mist"></div>
   </div>
@@ -31,7 +33,7 @@
     <div class="home-hero">
       <div class="hero-orbit" aria-hidden="true"></div>
       <div class="hero-cottage" data-cottage></div>
-      <div class="hero-fairy" aria-hidden="true"><span class="hero-wing"></span><span class="hero-orb"></span></div>
+      <div class="hero-fairy" aria-hidden="true"><span class="hero-wing"></span><span class="hero-orb"></span><span class="hero-spark s1"></span><span class="hero-spark s2"></span><span class="hero-spark s3"></span></div>
       <div class="home-copy">
         <h1>把夜空摘下来，<br>拼回一幅画。</h1>
         <p>小精灵住在玻璃小屋里。点开星罐，让它们把散落的星光一颗颗带回家。</p>
@@ -40,7 +42,7 @@
 
     <main class="level-list-wrap">
       <div class="level-list-head">
-        <span>今夜的五幅画</span>
+        <span>今夜的画</span>
         <span class="list-rule"></span>
         <span class="level-list-note">点一幅开始</span>
       </div>
@@ -76,6 +78,7 @@
         <div class="board-frame" id="boardFrame">
           <div class="board-corner tl" aria-hidden="true"></div><div class="board-corner tr" aria-hidden="true"></div>
           <div class="board-corner bl" aria-hidden="true"></div><div class="board-corner br" aria-hidden="true"></div>
+          <div class="board-crest" aria-hidden="true"></div>
           <canvas id="boardCanvas" role="img" aria-label="待摘的星光画"></canvas>
           <div class="board-vignette" aria-hidden="true"></div>
         </div>
@@ -99,6 +102,7 @@
         </div>
         <div class="queue-grid" id="queueGrid"></div>
       </section>
+      <div id="propTray" class="prop-tray" aria-label="星具"></div>
     </main>
     <div class="safe-foot" aria-hidden="true"></div>
   </section>
@@ -134,9 +138,9 @@
   <div id="enterVeil" class="enter-veil" hidden><span class="enter-spark" aria-hidden="true"></span><span>正在点亮…</span></div>
 </div>
 
-<script src="js/levels.js?v=246d2d77"></script>
-<script src="js/engine.js?v=246d2d77"></script>
-<script src="js/art.js?v=246d2d77"></script>
-<script src="js/app.js?v=246d2d77"></script>
+<script src="js/levels.js?v=5de4a703"></script>
+<script src="js/engine.js?v=5de4a703"></script>
+<script src="js/art.js?v=5de4a703"></script>
+<script src="js/app.js?v=5de4a703"></script>
 </body>
 </html>

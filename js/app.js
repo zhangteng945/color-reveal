@@ -8,10 +8,26 @@
   const PALETTE = window.SHIGUANG_PALETTE || {};
   const PROOFS = window.SHIGUANG_PROOFS || {};
   const STORE_KEY = 'shiguang-progress-v1';
+  const CUSTOM_STORE_KEY = 'shiguang-custom-levels-v1';
   const JAR_ENTER_MS = 270;
   const DISPATCH_MS = 145;
   const BASE_SPEED = 168;
 
+  const PROPS = [
+    { id: 'borrow-slot', name: '借槽', glyph: '＋', unlockLevel: 3, desc: '临时多一个出巢位' },
+    { id: 'pick-back', name: '选后排', glyph: '⇡', unlockLevel: 4, desc: '从一列的后排取一罐' },
+    { id: 'clear-12', name: '清除', glyph: '✕', unlockLevel: 8, desc: '清除至多 12 格' },
+    { id: 'absorb', name: '吸收', glyph: '◌', unlockLevel: 10, desc: '吸收同色星' },
+  ];
+  // 已验证列排列的变体：每次进入/重来随机抽一个；一局内不再变。
+  const VARIANT_PERMS = [[0,1,2,3],[0,2,1,3],[1,0,2,3],[1,2,3,0],[2,1,0,3],[2,3,0,1],[3,0,1,2],[3,2,1,0]];
+  function makeVariants(level, proof) {
+    const base = level.columns || [];
+    return VARIANT_PERMS.map(perm => ({
+      columns: perm.map(ci => (base[ci] || []).map(j => ({ color: j.color, count: j.count }))),
+      proof: (proof || []).map(ci => perm.indexOf(ci)),
+    }));
+  }
   const $ = (sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -38,6 +54,7 @@
     queueCard: $('#queueCard'),
     queueGrid: $('#queueGrid'),
     queueTip: $('#queueTip'),
+    propTray: $('#propTray'),
     fx: $('#fxCanvas'),
     toast: $('#toast'),
     coach: $('#coach'),
@@ -74,6 +91,9 @@
     lostAt: 0,
     clearedAt: 0,
     revealStarted: false,
+    revealAt: 0,
+    revealDuration: 1450,
+    winPrompted: false,
     overlayMode: null,
     overlayOpen: false,
     nextIndex: -1,
@@ -85,11 +105,63 @@
     firstTipLevel: -1,
     timeScale: 1,
     waitingSince: {},
+    propsUsed: {},
+    propMode: null,
+    holdColor: null,
+    holdTimer: 0,
+    holdActive: false,
+    suppressClick: false,
+    currentProof: [],
+    currentVariant: 0,
+    fixedVariant: null,
+    levelVariants: [],
   };
 
+  const HOME_META = [
+    { season: '长夜季', theme: '萤溪与玻璃屋', night: '第一晚', steps: 9 },
+    { season: '长夜季', theme: '月下的玻璃花房', night: '第二晚', steps: 15 },
+    { season: '长夜季', theme: '纸船与星港', night: '第三晚', steps: 13 },
+    { season: '长夜季', theme: '雾岭与灯屋', night: '第四晚', steps: 14 },
+    { season: '长夜季', theme: '破晓与铃兰', night: '第五晚', steps: 15 },
+  ];
+  LEVELS.forEach((level, i) => {
+    const m = HOME_META[i] || { season: '长夜季', theme: '未命名的画', night: `第${i + 1}晚` };
+    level.season = m.season; level.theme = m.theme; level.night = m.night;
+    level.steps = (PROOFS[level.id] || []).length || m.steps;
+    level.chapter = level.chapter || m.night;
+  });
   const progress = loadProgress();
   const tipSeen = progress.tips || {};
   const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function loadCustomLevels(params) {
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem(CUSTOM_STORE_KEY) || '[]'); } catch (e) { list = []; }
+    if (!Array.isArray(list)) list = [];
+    let play = null;
+    if (params && params.get('custom') === '1') {
+      try { play = JSON.parse(localStorage.getItem('shiguang-custom-play-v1') || 'null'); } catch (e) { play = null; }
+      if (play) list = [play].concat(list.filter(l => l && l.id !== play.id));
+    }
+    let firstCustom = null;
+    for (const raw of list) {
+      if (!raw || !Array.isArray(raw.cells) || !Array.isArray(raw.columns) || !Array.isArray(raw.proof)) continue;
+      const N = raw.cells.length;
+      if (N < 8 || N > 24 || raw.columns.length !== 4) continue;
+      if (LEVELS.some(l => l.id === raw.id)) continue;
+      const level = { ...raw };
+      level.season = level.season || '自定季';
+      level.theme = level.theme || '上传的画';
+      level.night = level.night || '自定晚';
+      level.chapter = level.chapter || level.night;
+      level.steps = level.actualMoves || (level.proof ? level.proof.length : 0);
+      level.cells = level.cells.map(row => row.slice());
+      LEVELS.push(level);
+      PROOFS[level.id] = level.proof.slice();
+      if (!firstCustom && play && level.id === play.id) firstCustom = level;
+    }
+    return firstCustom || (play ? LEVELS.find(l => l.id === play.id) || null : null);
+  }
 
   function loadProgress() {
     try {
@@ -114,6 +186,9 @@
     state.timers.clear();
     clearTimeout(state.coachTimer);
     clearTimeout(state.toastTimer);
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   }
   function colorMeta(color) {
     return PALETTE[color] || { name: color, fill: '#7a6a9a', glow: '#cdbce8' };
@@ -150,7 +225,7 @@
       card.type = 'button';
       card.className = 'level-card' + (done ? ' is-done' : '');
       card.dataset.level = String(i);
-      card.setAttribute('aria-label', `${level.chapter} ${level.name}，${level.difficulty}${done ? '，已拾回' : ''}，点按开始`);
+      card.setAttribute('aria-label', `${level.season} ${level.night}，${level.name}，${level.theme}，${level.difficulty}${done ? '，已拾回' : ''}，点按开始`);
       const canvas = document.createElement('canvas');
       canvas.width = 64; canvas.height = 64;
       const thumb = document.createElement('span');
@@ -158,7 +233,8 @@
       thumb.appendChild(canvas);
       const info = document.createElement('span');
       info.className = 'level-info';
-      info.innerHTML = `<span class="level-kicker"><i class="dot"></i>${level.chapter} · ${level.difficulty}</span><span class="level-name">${level.name}</span><span class="level-sub">${level.intro}</span>`;
+      const stepText = level.steps ? `约 ${level.steps} 步 · ` : '';
+      info.innerHTML = `<span class="level-kicker"><i class="dot"></i>${escapeHtml(level.season)} · ${escapeHtml(level.night)} · ${escapeHtml(level.difficulty)}</span><span class="level-name">${escapeHtml(level.name)}</span><span class="level-sub">${escapeHtml(level.theme)} · ${stepText}${escapeHtml(level.intro)}</span>`;
       const go = document.createElement('span');
       go.className = 'card-go';
       go.innerHTML = done ? `已拾回<b>${done.moves} 步</b>` : `启程<b>→</b>`;
@@ -224,7 +300,20 @@
     clearTimers();
     state.levelIndex = index;
     state.loadingLevel = null;
-    state.game = new ENGINE.ShiguangGame(LEVELS[index], { slotCount: 5, visibleRows: 3 });
+    const baseLevel = LEVELS[index];
+    const variants = makeVariants(baseLevel, PROOFS[baseLevel.id] || []);
+    state.levelVariants = variants;
+    const forced = opts.variant != null ? opts.variant : state.fixedVariant;
+    const variantIndex = forced != null
+      ? Math.abs(parseInt(forced, 10) || 0) % Math.max(1, variants.length)
+      : Math.floor(Math.random() * Math.max(1, variants.length));
+    const variant = variants[variantIndex] || { columns: baseLevel.columns, proof: PROOFS[baseLevel.id] || [] };
+    state.currentVariant = variantIndex;
+    state.currentProof = variant.proof.slice();
+    state.game = new ENGINE.ShiguangGame(
+      { ...baseLevel, columns: variant.columns.map(col => col.map(j => ({ ...j }))) },
+      { slotCount: 5, visibleRows: 3 }
+    );
     state.timeScale = 1;
     state.startedAt = nowMs();
     state.arriving = {};
@@ -238,11 +327,19 @@
     state.lostAt = 0;
     state.clearedAt = 0;
     state.revealStarted = false;
+    state.revealAt = 0;
+    state.winPrompted = false;
     state.overlayMode = null;
     state.overlayOpen = false;
     state.nextIndex = index + 1 < LEVELS.length ? index + 1 : -1;
     state.coachKey = null;
     state.waitingSince = {};
+    state.propsUsed = {};
+    state.propMode = null;
+    state.holdColor = null;
+    state.holdActive = false;
+    state.suppressClick = false;
+    clearTimeout(state.holdTimer);
     hideCoach();
     el.overlay.hidden = true;
     el.nextPill.hidden = true;
@@ -250,7 +347,7 @@
     el.nextFromPill.textContent = '前往下一关';
     el.enterVeil.hidden = true;
     el.play.classList.remove('is-dead');
-    el.boardFrame.classList.remove('is-complete');
+    el.boardFrame.classList.remove('is-complete', 'is-revealing');
     el.modalPainting.style.display = '';
     el.queueCard.classList.remove('is-final');
     el.home.hidden = true;
@@ -260,8 +357,9 @@
     el.play.classList.add('is-entering');
     state.screen = 'play';
     buildSlots();
+    buildProps();
     const level = LEVELS[index];
-    el.levelChapter.textContent = level.chapter;
+    el.levelChapter.textContent = `${level.season || level.chapter} · ${level.night || level.chapter}`;
     el.levelName.textContent = level.name;
     el.totalCount.textContent = state.game.total;
     renderAll();
@@ -280,7 +378,7 @@
     const level = LEVELS[index];
     if (index === 0 && !tipSeen['first-tap']) {
       later(() => {
-        const tipCol = (PROOFS[level.id] || [0])[0] || 0;
+        const tipCol = (state.currentProof || PROOFS[level.id] || [0])[0] || 0;
         const first = el.queueGrid.querySelector(`.queue-jar-btn[data-col="${tipCol}"][data-row="0"]`);
         if (!first || state.screen !== 'play') return;
         first.classList.add('is-prompted');
@@ -332,6 +430,88 @@
 
   function renderAll() { renderQueue(); renderSlots(); updateHud(true); }
 
+  function propUnlocked(p) { return (state.levelIndex + 1) >= p.unlockLevel; }
+
+  function buildProps() {
+    if (!el.propTray) return;
+    el.propTray.innerHTML = '';
+    PROPS.forEach(p => {
+      const unlocked = propUnlocked(p);
+      const used = !!state.propsUsed[p.id];
+      const active = state.propMode === p.id;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'prop-btn' + (unlocked ? ' is-unlocked' : ' is-locked') + (used ? ' is-used' : '') + (active ? ' is-active' : '');
+      btn.dataset.prop = p.id;
+      btn.disabled = !unlocked || used;
+      btn.setAttribute('aria-label', unlocked ? `${p.name}，${used ? '本关已用' : p.desc}` : `${p.name}，第 ${p.unlockLevel} 关解锁`);
+      const label = unlocked ? p.name : `第${p.unlockLevel}关`;
+      btn.innerHTML = `<span class="prop-icon">${p.glyph}</span><span class="prop-name">${label}</span>` +
+        (!unlocked ? '<span class="prop-lock">锁</span>' : used ? '<span class="prop-check">✓</span>' : '');
+      btn.addEventListener('click', () => useProp(p.id));
+      el.propTray.appendChild(btn);
+    });
+  }
+
+  function useProp(id) {
+    const p = PROPS.find(x => x.id === id);
+    if (!p || !state.game) return;
+    if (!propUnlocked(p)) { showToast(`第 ${p.unlockLevel} 关解锁${p.name}。`); return; }
+    if (state.propsUsed[id]) { showToast('这一关已经用过了。'); return; }
+    if (id === 'borrow-slot') {
+      const r = state.game.addSlot();
+      if (!r.ok) { showToast('出巢位已经到六位上限。'); return; }
+      state.propsUsed[id] = true;
+      buildSlots();
+      renderSlots();
+      buildProps();
+      updateHud(true);
+      fitLayout();
+      showToast('借到一个新位子。');
+      return;
+    }
+    if (id === 'pick-back') {
+      state.propMode = state.propMode === 'pick-back' ? null : 'pick-back';
+      buildProps();
+      renderQueue();
+      showToast(state.propMode ? '点一罐后排的星罐。' : '已收起选后排。');
+      return;
+    }
+    // 第 8/10 关才解锁的星具：本轮没有对应关卡，保留锁与关次说明。
+    showToast(`${p.name}会在第 ${p.unlockLevel} 关解锁。`);
+  }
+
+  function clearPropMode() {
+    state.propMode = null;
+    if (el.queueGrid) el.queueGrid.querySelectorAll('.is-back-target').forEach(b => b.classList.remove('is-back-target'));
+    buildProps();
+  }
+
+  function startHold(color, btn) {
+    clearTimeout(state.holdTimer);
+    state.holdActive = false;
+    state.holdColor = null;
+    state.holdTimer = setTimeout(() => {
+      if (!state.game || state.screen !== 'play') return;
+      state.holdActive = true;
+      state.holdColor = color;
+      state.suppressClick = true;
+      if (btn) btn.classList.add('is-holding');
+      drawBoardFrame();
+    }, 220);
+  }
+
+  function endHold(btn) {
+    clearTimeout(state.holdTimer);
+    if (state.holdActive) {
+      state.holdActive = false;
+      state.holdColor = null;
+      if (btn) btn.classList.remove('is-holding');
+      drawBoardFrame();
+      setTimeout(() => { state.suppressClick = false; }, 320);
+    }
+  }
+
   function renderQueue() {
     if (!state.game) return;
     const game = state.game;
@@ -350,7 +530,9 @@
         }
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'queue-jar-btn' + (r === 0 && jar ? ' is-top' : '') + (r === 0 && !game.hasEmptySlot ? ' is-unavailable' : '');
+        btn.className = 'queue-jar-btn' + (r === 0 && jar ? ' is-top' : '') +
+          (r === 0 && !game.hasEmptySlot ? ' is-unavailable' : '') +
+          (r > 0 && state.propMode === 'pick-back' ? ' is-back-target' : '');
         btn.dataset.col = String(c);
         btn.dataset.row = String(r);
         btn.dataset.uid = jar.uid;
@@ -360,6 +542,10 @@
         btn.tabIndex = top ? 0 : -1;
         btn.innerHTML = jarMarkup(jar.color, jar.count, top ? 'is-top' : '') + '<span class="tap-ring" aria-hidden="true"></span>';
         btn.addEventListener('click', () => onQueueClick(c, r));
+        btn.addEventListener('pointerdown', () => startHold(jar.color, btn));
+        btn.addEventListener('pointerup', () => endHold(btn));
+        btn.addEventListener('pointercancel', () => endHold(btn));
+        btn.addEventListener('pointerleave', () => endHold(btn));
         row.appendChild(btn);
         col.appendChild(row);
       }
@@ -380,7 +566,7 @@
     el.queueCard.classList.toggle('is-final', game.queueEmptied);
     // 第一次提示的环形高亮在重绘后重新挂回队首
     if (state.firstTipLevel === state.levelIndex && !tipSeen['first-tap']) {
-      const tipCol = (PROOFS[state.game.level.id] || [0])[0] || 0;
+      const tipCol = (state.currentProof || PROOFS[state.game.level.id] || [0])[0] || 0;
       const first = el.queueGrid.querySelector(`.queue-jar-btn[data-col="${tipCol}"][data-row="0"]`);
       if (first) first.classList.add('is-prompted');
     }
@@ -448,7 +634,9 @@
     if (state.loadingLevel !== null || !el.enterVeil.hidden) return;
     const top = state.game.topJar(col);
     if (!top) return;
-    if (row !== 0) {
+    if (state.suppressClick) { state.suppressClick = false; return; }
+    const useBack = state.propMode === 'pick-back' && row > 0;
+    if (row !== 0 && !useBack) {
       showToast('只能点每列最上面的星罐。');
       return;
     }
@@ -461,13 +649,15 @@
       return;
     }
     // 取罐前记录被点元素的位置，做一次真实的“飞入出巢位”过渡
-    const btn = el.queueGrid.querySelector(`.queue-jar-btn[data-col="${col}"][data-row="0"]`);
+    const takeRow = useBack ? row : 0;
+    const btn = el.queueGrid.querySelector(`.queue-jar-btn[data-col="${col}"][data-row="${takeRow}"]`);
     const fromRect = btn ? btn.getBoundingClientRect() : null;
-    const res = state.game.takeColumn(col, nowMs());
+    const res = useBack ? state.game.takeJarAt(col, takeRow, nowMs()) : state.game.takeColumn(col, nowMs());
     if (!res.ok) {
       showToast(res.reason === 'no-slot' ? '出巢位满了，等精灵腾位。' : '这一列暂时没有星罐。');
       return;
     }
+    if (useBack) { state.propsUsed['pick-back'] = true; clearPropMode(); }
     markTip('first-tap');
     hideCoach();
     state.firstTipLevel = -1;
@@ -495,7 +685,10 @@
     const otherReachable = otherColumnsReachable(col);
     const mineReachable = state.game.reachableCells(res.jar.color).length > 0;
     if (!mineReachable && otherReachable && state.levelIndex >= 1 && !tipSeen['skip-temptation']) {
-      later(() => maybeTip('skip-temptation', '这一罐暂时够不着，可以先看看别的列。', state.slotEls[res.slotIndex], 4600, true), 700);
+      later(() => {
+        const alt = suggestAlternative(col);
+        maybeTip('skip-temptation', '这一罐暂时够不着，可以先看看别的列。', alt || state.slotEls[res.slotIndex], 4600, true);
+      }, 700);
     }
     const occupied = state.game.slots.filter(s => s.jar).length;
     if (state.levelIndex === 2 && !tipSeen['leave-empty-3'] && occupied >= 3) {
@@ -517,6 +710,22 @@
       if (j && state.game.reachableCells(j.color).length) return true;
     }
     return false;
+  }
+
+  // 只做一次轻环提示，不替玩家点，也不高亮整条解法。
+  function suggestAlternative(skipCol) {
+    if (!state.game) return null;
+    for (let c = 0; c < state.game.maxCols; c++) {
+      if (c === skipCol) continue;
+      const j = state.game.topJar(c);
+      if (!j || !state.game.reachableCells(j.color).length) continue;
+      const btn = el.queueGrid.querySelector(`.queue-jar-btn[data-col="${c}"][data-row="0"]`);
+      if (!btn) continue;
+      btn.classList.add('is-suggested');
+      setTimeout(() => btn.classList.remove('is-suggested'), 4400);
+      return btn;
+    }
+    return null;
   }
 
   function maybeWaitingTip(slotIndex, jar) {
@@ -556,6 +765,8 @@
   function showCoach(text, anchor, opts) {
     opts = opts || {};
     if (!text) return;
+    // 同屏只留一条提示：出现更具体的动作提示时，让短 toast 退场。
+    hideToast();
     el.coachText.textContent = text;
     el.coach.hidden = false;
     el.coach.classList.remove('below');
@@ -577,7 +788,8 @@
     }
     const bubbleW = Math.min(280, Math.max(150, el.coachText.textContent.length * 13 + 28));
     const half = bubbleW / 2;
-    const x = clamp(rect.left + rect.width / 2, 12 + half, innerWidth - 12 - half);
+    const targetX = rect.left + rect.width / 2;
+    const x = clamp(targetX, 12 + half, innerWidth - 12 - half);
     let y = rect.top - 12;
     let below = false;
     if (y < 76) { y = rect.bottom + 12; below = true; }
@@ -585,6 +797,9 @@
     el.coach.style.left = `${x}px`;
     el.coach.style.top = `${y}px`;
     el.coach.style.width = `${bubbleW}px`;
+    // 气泡被屏幕边缘夹住时，尾巴仍指向目标，而不是跟着气泡中心跑。
+    const tailX = clamp(targetX - (x - half), 14, bubbleW - 14);
+    el.coach.style.setProperty('--tail-x', `${tailX}px`);
   }
 
   function hideCoach() {
@@ -593,7 +808,7 @@
     state.coachKey = null;
     state.coachAnchor = null;
     clearTimeout(state.coachTimer);
-    $$('.queue-jar-btn.is-prompted').forEach(b => b.classList.remove('is-prompted'));
+    $$('.queue-jar-btn.is-prompted,.queue-jar-btn.is-suggested').forEach(b => { b.classList.remove('is-prompted'); b.classList.remove('is-suggested'); });
   }
 
   function showToast(text, ms) {
@@ -617,11 +832,12 @@
     const topH = $('.topbar').offsetHeight;
     const terraceH = $('.terrace').offsetHeight;
     const queueH = el.queueCard.offsetHeight;
+    const propH = el.propTray ? el.propTray.offsetHeight : 0;
     const style = getComputedStyle(el.play);
     const padT = parseFloat(style.paddingTop) || 0;
     const padB = parseFloat(style.paddingBottom) || 0;
     const mainGap = parseFloat(getComputedStyle($('.play-main')).rowGap) || 6;
-    const avail = el.play.clientHeight - padT - padB - topH - terraceH - queueH - mainGap * 2 - 8;
+    const avail = el.play.clientHeight - padT - padB - topH - terraceH - queueH - propH - mainGap * 3 - 8;
     const maxBoard = Math.min(320, contentW - 14);
     let board = Math.min(maxBoard, avail - 14);
     board = clamp(board, 224, 320);
@@ -640,7 +856,7 @@
     if (!state.game || !state.fairies.length) return;
     for (const f of state.fairies) {
       try {
-        f.outPath = buildFlightPath(f.slotIndex, f.claim.index);
+        f.outPath = buildFlightPath(f.slotIndex, f.claim.index, f.lane);
         if (f.status === 'out') f.path = f.outPath;
         else f.path = buildReturnPath(f);
         const p = pointAt(f.path, f.t);
@@ -651,10 +867,16 @@
 
   function drawBoardFrame() {
     if (!state.game) return;
+    const now = nowMs();
+    const reveal = state.revealStarted
+      ? clamp((now - state.revealAt) / state.revealDuration, 0, 1)
+      : 0;
     ART.drawBoard(el.boardCanvas, state.game, {
-      now: nowMs(),
+      now,
       flashes: state.flashes,
-      complete: state.status === 'cleared' || state.revealStarted,
+      complete: state.revealStarted,
+      reveal,
+      highlightColor: state.holdColor,
     });
   }
 
@@ -734,7 +956,7 @@
     return path;
   }
 
-  function buildFlightPath(slotIndex, targetIndex) {
+  function buildFlightPath(slotIndex, targetIndex, lane) {
     const g = state.game, N = g.N;
     const b = boardGeom();
     const r = b.rect;
@@ -742,12 +964,14 @@
     const target = cellPoint(tx, ty);
     const start = slotPoint(slotIndex);
     const margin = Math.max(10, Math.min(16, b.cell * .7));
+    const laneOff = (lane || 0) * Math.max(2, b.cell * .16);
     const corr = corridor(targetIndex);
     const first = corr[0] || [tx, ty];
     const entry = { x: r.left + (first[0] + .5) * b.cell, y: r.top + (first[1] + .5) * b.cell };
     const side = first[0] === 0 ? 'left' : first[0] === N - 1 ? 'right' : first[1] === 0 ? 'top' : 'bottom';
     const entryX = entry.x, entryY = entry.y;
-    const railLeft = r.left - margin, railRight = r.right + margin, railBottom = r.bottom + margin, railTop = r.top - margin;
+    const railLeft = r.left - margin - laneOff, railRight = r.right + margin + laneOff;
+    const railBottom = r.bottom + margin + laneOff, railTop = r.top - margin - laneOff;
     const railSide = side === 'left' ? 'left' : side === 'right' ? 'right' : (entry.x < r.left + r.width / 2 ? 'left' : 'right');
     const railX = railSide === 'left' ? railLeft : railRight;
     const belowY = Math.max(railBottom, start.y - 10);
@@ -808,12 +1032,14 @@
   /* ---------- 小精灵与主循环 ---------- */
   function spawnFairy(result, now) {
     const claim = result.claim;
-    const outPath = buildFlightPath(result.slotIndex, claim.index);
+    const lane = (claim.id % 7) - 3;
+    const outPath = buildFlightPath(result.slotIndex, claim.index, lane);
     state.fairies.push({
       claim,
       slotIndex: result.slotIndex,
       color: claim.color,
       phase: (claim.index * .37) % (Math.PI * 2),
+      lane,
       status: 'out',
       t: 0,
       speed: BASE_SPEED,
@@ -894,17 +1120,7 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
     if (clearOnly || state.screen !== 'play' || !state.game) return;
-    // 槽位里等待出发的小精灵：采前只有颜色，不发光
-    for (let i = 0; i < state.game.slots.length; i++) {
-      const slot = state.game.slots[i];
-      if (!slot.jar || slot.jar.remaining <= 0) continue;
-      if (now - slot.enteredAt < JAR_ENTER_MS) continue;
-      const r = state.slotEls[i].getBoundingClientRect();
-      if (!r.width) continue;
-      ART.drawFairy(ctx, r.left + r.width / 2, r.top - 7, slot.jar.color, {
-        time: now, phase: i * 1.7, idle: true, glow: false, scale: .76,
-      });
-    }
+    // 出巢位里只保留罐体与静态氤氲彩光，不画实体光球；小精灵只在出发后出现。
     // 飞行中的小精灵
     for (const f of state.fairies) {
       if (f.x == null) {
@@ -929,17 +1145,17 @@
     }
     // 完成后的一圈暖光粒子
     if (state.revealStarted) {
-      const p = clamp((now - state.clearedAt) / 1400, 0, 1);
+      const p = clamp((now - state.revealAt) / 1700, 0, 1);
       const b = boardGeom().rect;
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
-      for (let i = 0; i < 14; i++) {
-        const a = i / 14 * Math.PI * 2 + now * .00018;
-        const rr = b.width * (.52 + .08 * Math.sin(i * 1.7 + now * .001));
+      for (let i = 0; i < 22; i++) {
+        const a = i / 22 * Math.PI * 2 + now * .00018;
+        const rr = b.width * (.52 + .11 * Math.sin(i * 1.7 + now * .001));
         const x = b.left + b.width / 2 + Math.cos(a) * rr;
-        const y = b.top + b.height / 2 + Math.sin(a) * rr * .72;
-        ctx.fillStyle = ART.rgba('#ffe6a8', (1 - p) * .3 + .04);
-        ctx.beginPath(); ctx.arc(x, y, 1.2 + (i % 3) * .6, 0, Math.PI * 2); ctx.fill();
+        const y = b.top + b.height / 2 + Math.sin(a) * rr * .78;
+        ctx.fillStyle = ART.rgba(i % 3 ? '#ffe6a8' : '#9fe0d4', (1 - p) * .36 + .05);
+        ctx.beginPath(); ctx.arc(x, y, 1.2 + (i % 3) * .7, 0, Math.PI * 2); ctx.fill();
       }
       ctx.restore();
     }
@@ -1014,10 +1230,12 @@
     if (state.revealStarted) return;
     state.revealStarted = true;
     state.status = 'cleared';
+    state.revealAt = nowMs();
     hideCoach();
-    el.boardFrame.classList.add('is-complete');
+    el.boardFrame.classList.add('is-complete', 'is-revealing');
     saveCompletion();
-    later(() => showWinModal(), reducedMotion ? 350 : 1150);
+    later(() => el.boardFrame.classList.remove('is-revealing'), 2400);
+    // 弹层不在这里定时：等原画绘完、最后一只精灵也回家后再弹，避免盖住显现过程。
   }
 
   function saveCompletion() {
@@ -1042,10 +1260,10 @@
     const game = state.game;
     const waiting = game.slots.filter(s => s.jar).length;
     el.modalText.textContent = waiting >= 5
-      ? '五个位子都在等星，暂时没有能摘的星了。重来一次，换一条路。'
-      : '星罐都放完了，剩下的星还被埋在画里。重来一次，换一条路。';
+      ? '五个位子都在等星，暂时没有能摘的星了。重来免费，进度不会丢。'
+      : '星罐都放完了，剩下的星还被埋在画里。重来免费，进度不会丢。';
     el.modalPainting.style.display = 'none';
-    el.modalPrimary.textContent = '重来本关';
+    el.modalPrimary.textContent = '免费重来';
     el.modalSecondary.textContent = '回到选关';
     el.modalClose.hidden = true;
     el.overlay.hidden = false;
@@ -1133,7 +1351,14 @@
       }
       if (state.game.status === 'cleared') {
         if (!state.clearedAt) state.clearedAt = now;
-        if (!state.revealStarted && state.fairies.length === 0 && now - state.clearedAt > 420) startReveal();
+        // 最后一颗星摘到后就让原画在盘面上绘出来；不用等小精灵全部回家。
+        if (!state.revealStarted && now - state.clearedAt > 200) startReveal();
+        if (state.revealStarted && !state.winPrompted && !state.overlayOpen &&
+            state.fairies.length === 0 &&
+            now - state.revealAt > state.revealDuration + (reducedMotion ? 120 : 760)) {
+          state.winPrompted = true;
+          showWinModal();
+        }
       }
       if (state.game.status === 'lost') scheduleLoss(now);
       drawBoardFrame();
@@ -1206,6 +1431,20 @@
       get game() { return state.game; },
       get state() { return state; },
       startLevel, toHome, fitLayout,
+      useProp,
+      get currentProof() { return state.currentProof; },
+      get levelVariants() { return state.levelVariants; },
+      sampleBoard(x, y) {
+        // 仅用于本地验收：读取盘面中心的实际像素，验证“摘走后星消失”和“同格绘出原画”。
+        const cv = el.boardCanvas;
+        const ctx = cv.getContext('2d');
+        const dpr = cv.width / (cv.clientWidth || 1);
+        const cell = cv.width / state.game.N;
+        const px = Math.floor((x + .5) * cell);
+        const py = Math.floor((y + .5) * cell);
+        const d = ctx.getImageData(px, py, 1, 1).data;
+        return { r: d[0], g: d[1], b: d[2], a: d[3], dpr, size: cv.width };
+      },
       setTimeScale(v) { state.timeScale = Math.max(0.25, Math.min(20, +v || 1)); return state.timeScale; },
       proofs: PROOFS,
       forceLossForPreview() {
@@ -1243,6 +1482,7 @@
         renderQueue();
         drawBoardFrame();
         startReveal();
+        state.winPrompted = false;
       }
     };
   }
@@ -1250,9 +1490,12 @@
   function init() {
     injectWorld();
     bind();
-    buildHome();
     const params = new URLSearchParams(location.search);
+    const customPlay = loadCustomLevels(params);
+    buildHome();
     if (params.get('debug') === '1') exposeDebug();
+    const qVariant = parseInt(params.get('variant'), 10);
+    if (Number.isFinite(qVariant) && qVariant >= 0) state.fixedVariant = qVariant;
     const qLevel = params.get('level');
     if (qLevel) {
       const byId = LEVELS.findIndex(l => l.id === qLevel || l.name === qLevel);
@@ -1261,6 +1504,9 @@
       if (index >= 0) {
         startLevel(index, { instant: params.get('instant') === '1' });
       }
+    } else if (customPlay) {
+      const index = LEVELS.findIndex(l => l.id === customPlay.id);
+      if (index >= 0) startLevel(index, { instant: params.get('instant') === '1' });
     }
     requestAnimationFrame(loop);
   }

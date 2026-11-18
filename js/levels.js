@@ -96,10 +96,10 @@
         ["pine","pine","pine","pine","pine","pine","pine","cream","pine","pine","pine","pine","pine","pine","pine","pine"],
       ],
       columns: [
-        [{"color":"pine","count":27},{"color":"pine","count":26},{"color":"teal","count":20}],
-        [{"color":"indigo","count":19},{"color":"indigo","count":19},{"color":"violet","count":13}],
-        [{"color":"pine","count":26},{"color":"violet","count":17},{"color":"cream","count":14}],
-        [{"color":"pine","count":28},{"color":"indigo","count":19},{"color":"violet","count":16},{"color":"gold","count":12}],
+        [{"color":"indigo","count":29},{"color":"violet","count":23}],
+        [{"color":"pine","count":53},{"color":"teal","count":20}],
+        [{"color":"indigo","count":28},{"color":"cream","count":14}],
+        [{"color":"pine","count":54},{"color":"violet","count":23},{"color":"gold","count":12}],
       ],
     },
     {
@@ -216,7 +216,7 @@
     },
   ];
   const SOLUTIONS = {
-    "glow-path": [3,0,1,2,1,0,3,2,3,0,1,2,3],
+    "glow-path": [3,0,1,2,3,0,1,2,3],
     "moon-house": [1,3,2,1,1,2,2,3,3,1,0,0,0,0,0],
     "paper-harbor": [1,2,3,0,1,2,3,0,1,2,3,0,1],
     "mist-lodge": [2,3,0,1,2,3,0,1,2,3,0,1,2,3],

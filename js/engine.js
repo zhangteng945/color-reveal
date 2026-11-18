@@ -65,6 +65,16 @@
       return -1;
     }
 
+    // 第 3 关“借槽”：在六格预留宽度内临时加一个出巢位；本局内不再左挤。
+    addSlot() {
+      if (this.slots.length >= 6) return { ok: false, reason: 'max' };
+      const index = this.slots.length;
+      this.slots.push({ index, jar: null, enteredAt: 0, leaveAt: 0 });
+      this.slotCount = this.slots.length;
+      this.events.push({ type: 'add-slot', index });
+      return { ok: true, index, slotCount: this.slotCount };
+    }
+
     topJar(col) {
       const c = this.columns[col];
       return c && c.length ? c[0] : null;
@@ -100,6 +110,26 @@
       this.lastAction = { type: 'take', col, slotIndex, jar, queueEmptied: this.queueEmptied };
       this.checkStatus();
       return { ok: true, jar, slotIndex, queueEmptied: this.queueEmptied, slot };
+    }
+
+    // 第 4 关“选后排”：从某一列的第二/第三排取罐；上面的罐不补到下面，下面的罐补位。
+    takeJarAt(col, row, now) {
+      if (this.status !== 'playing') return { ok: false, reason: 'ended' };
+      const c = this.columns[col];
+      if (!c || row < 0 || row >= c.length) return { ok: false, reason: 'empty' };
+      if (row === 0) return this.takeColumn(col, now);
+      if (!this.hasEmptySlot) return { ok: false, reason: 'no-slot' };
+      const jar = c.splice(row, 1)[0];
+      const slotIndex = this.firstEmptySlot();
+      const slot = this.slots[slotIndex];
+      slot.jar = jar;
+      slot.enteredAt = now || 0;
+      slot.leaveAt = 0;
+      this.moves++;
+      if (this.queueEmpty) this.queueEmptied = true;
+      this.lastAction = { type: 'take-back', col, row, slotIndex, jar, queueEmptied: this.queueEmptied };
+      this.checkStatus();
+      return { ok: true, jar, slotIndex, queueEmptied: this.queueEmptied, slot, backRow: row };
     }
 
     // 由 UI 在罐子进位动画结束后才允许调用。返回一只出发的小精灵与它认领的星。
