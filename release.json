@@ -1,8 +1,8 @@
 {
   "role": "isolated complete readonly export; NOT public deployment/authority merge",
   "exportVersion": 1,
-  "requestId": "center-prompt-enter-prefetch-home-4266-v1",
-  "createdAt": "2026-11-18T04:05:35.436Z",
+  "requestId": "dsh-align-prompt-enter-prefetch-v1",
+  "createdAt": "2026-11-18T04:34:07.394Z",
   "sourceCatalogSha256": "2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78",
   "playerLibrary": {
     "schemaVersion": 2,
@@ -12,7 +12,7 @@
     "index": "/library/indexes/3da3f38ce99210d9cf23d882bd9fb08f03be7c51c9c761fc062981054e877f2a.json",
     "sourceCatalogSha256": "2af814d9bae969fef4dbb6af2f32482b1868984e4de7fb614e70eba6f2fefd78"
   },
-  "runtimeSha": "39a0329b1a3096fa7165d44a858533aa2e5f0b1ddadffb3500a26dcf80da4a4c",
+  "runtimeSha": "5ce620dc79f472e4427d5ef3afffc603d7262923d3b4d739844721288b9e872d",
   "treeFormula": "CR-TREE-SHA256-V1",
   "contracts": {
     "catalog": 4,
