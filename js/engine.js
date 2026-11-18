@@ -377,7 +377,7 @@
     const errors = [];
     if (!level.cells || !level.cells.length) { errors.push('棋盘不能为空'); return errors; }
     const N = level.cells.length;
-    if (N < 4 || N > 28) errors.push('棋盘边长需在 4–28');
+    if (N < 4 || N > 36) errors.push('棋盘边长需在 4–36');
     const counts = {};
     for (const row of level.cells) {
       if (row.length !== N) errors.push('棋盘必须是 N×N 方阵');

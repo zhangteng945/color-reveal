@@ -243,7 +243,8 @@
     if (spriteCache.has(key)) return spriteCache.get(key);
     const sc = starColor(color);
     // 星点大小只由本关格距决定：整颗星（含柔光）略小于一格，星与星之间只留细缝。
-    const S = Math.max(10, cell * 0.96);
+    // 不设固定像素下限，否则高密度关卡会比格距还大、星星互相压住。
+    const S = cell * 0.96;
     const cv = document.createElement('canvas');
     cv.width = Math.ceil(S * dpr);
     cv.height = Math.ceil(S * dpr);
@@ -683,10 +684,10 @@
   }
 
   /* ---------------- 小精灵 ---------------- */
-  function starSizeForCell(cell) { return Math.max(10, cell * 0.96); }
+  function starSizeForCell(cell) { return cell * 0.96; }
   function fairyScaleForCell(cell) {
     // 内部展开约 22 单位宽；含翅膀始终比一格小一截。密度越高，格越小，精灵越小。
-    return clamp(cell * 0.82 / 22, .32, 1.25);
+    return clamp(cell * 0.82 / 22, .22, 1.25);
   }
 
   function drawFairy(ctx, x, y, color, opts) {

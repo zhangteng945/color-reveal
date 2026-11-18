@@ -1189,9 +1189,16 @@
     } else {
       pts.push({ x: out.x, y: yB });
     }
+    // 终点前只按小屋自身的局部距离收拢，不能再拿棋盘高度算偏移：
+    // 棋盘高度是 236–336px，乘 .18 会把“门前”落到小屋下方的出巢槽格里，
+    // 精灵会先下探到槽格、再折返门口，看起来像回屋后又往格子里跳一下。
+    const doorApproachY = Math.min(
+      door.y + Math.max(6, b.cell * .32),
+      el.slotFrame.getBoundingClientRect().top - 8
+    );
     pts.push({ x: door.x + swing * b.cell * 1.5, y: b.rect.bottom + b.cell * .8 });
-    pts.push({ x: door.x + swing * b.cell * .9, y: door.y + b.rect.height * .18 });
-    pts.push({ x: door.x + swing * b.cell * .35, y: door.y + 8 });
+    pts.push({ x: door.x + swing * b.cell * .9, y: doorApproachY });
+    pts.push({ x: door.x + swing * b.cell * .35, y: door.y + 4 });
     pts.push({ x: door.x, y: door.y });
     return pts;
   }
